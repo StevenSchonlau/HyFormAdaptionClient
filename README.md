@@ -1,4 +1,6 @@
-﻿# Drone Testbed - Unity Interface
+﻿This is adapted from: https://github.com/hyform/drone-testbed-unity
+
+# Drone Testbed - Unity Interface
 This is the Unity interface for the HyForm drone design testbed. It pairs with a server backend available here: https://github.com/hyform/drone-testbed-server
 
 ## Quick setup guide
