@@ -271,6 +271,8 @@ namespace DesignerAssets
         public Texture2D selectedvehicle;
         public Texture2D infoimage;
 
+        public GameObject selObj;
+
         // tooltip variables
         private string tooltip = " ";
         private Rect tooltipRect = new Rect(0, 0, 65, 25);
@@ -928,23 +930,25 @@ namespace DesignerAssets
                 {
  
                     GameObject selected = hitInfo.transform.gameObject;
-                    string[] result = leftClickSelected(selected);
+                    playClick();
+                    selObj = selected;
+                    //string[] result = leftClickSelected(selected);
 
                     // if change in assembly
-                    if (!result.Equals(NOEVENT))
-                    {
-                        string s = generatestring();
-                        updateHistory(s);
-                        playClick();
-                        Capture.Log("MouseClick;" + result[0] + ";" + s + ";" + result[1], Capture.DESIGNER);
+                    //if (!result.Equals(NOEVENT))
+                    //{
+                     //   string s = generatestring();
+                    //    updateHistory(s);
+                     ///   playClick();
+                     //   Capture.Log("MouseClick;" + result[0] + ";" + s + ";" + result[1], Capture.DESIGNER);
+//
+  //                      Debug.Log(result[0]);
+   //                     if (tutorialStep == 1 && result[0].Contains("Toggle"))
+    //                        toggleTutorial();
+     //                   if (tutorialStep == 2 && result[0].Contains("AssemblyChange"))
+      //                      toggleTutorial();
 
-                        Debug.Log(result[0]);
-                        if (tutorialStep == 1 && result[0].Contains("Toggle"))
-                            toggleTutorial();
-                        if (tutorialStep == 2 && result[0].Contains("AssemblyChange"))
-                            toggleTutorial();
-
-                    }
+        //            }
 
                 }
             }
@@ -966,15 +970,18 @@ namespace DesignerAssets
                 if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo, 100.0f))
                 {
                     GameObject selected = hitInfo.transform.gameObject;
-                    scaleUpComponentAtJoint(selected);
+                    if (selected = selObj.transform.gameObject)
+                    {
+                        scaleUpComponentAtJoint(selected);
 
-                    string s = generatestring();
-                    updateHistory(s);
-                    playClick();
-                    Capture.Log((Input.GetMouseButtonDown(1) ? "ScaleUp;" : "HotKeyScaleUp;") + s + ";" + getJointPositionStr(selected), Capture.DESIGNER);
+                        string s = generatestring();
+                        updateHistory(s);
+                        playClick();
+                        Capture.Log((Input.GetMouseButtonDown(1) ? "ScaleUp;" : "HotKeyScaleUp;") + s + ";" + getJointPositionStr(selected), Capture.DESIGNER);
 
-                    if (tutorialStep == 5)
-                        toggleTutorial();
+                        if (tutorialStep == 5)
+                            toggleTutorial();
+                    }
 
                 }
             }

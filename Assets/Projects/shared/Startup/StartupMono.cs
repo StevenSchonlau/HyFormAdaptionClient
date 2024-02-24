@@ -10,6 +10,10 @@ public class StartupMono : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        //added, starts game 
+        AttachScripts();
+        return;
+
 #if UNITY_WEBGL && !UNITY_EDITOR
         Startup.csrfToken = SessionLib.GetCSRFToken();
         Startup.userid = SessionLib.GetUserName();
