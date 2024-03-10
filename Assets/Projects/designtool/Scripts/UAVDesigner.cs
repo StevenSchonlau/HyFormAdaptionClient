@@ -335,6 +335,7 @@ namespace DesignerAssets
             // reset the view position
             ResetView();
 
+
             // initialize the first joint and set the base design
             //Initialize();
 
@@ -368,6 +369,7 @@ namespace DesignerAssets
         public void Initialize(string designString, bool restartHist)
         {
 
+            ShowTestStandEvaluation(false);
             // sets the joint index counter to 0
             JointInfo.counter = 0;
 
@@ -1720,6 +1722,7 @@ namespace DesignerAssets
 
             // remove the teststand
             ShowTestStand(false);
+            ShowTestStandEvaluation(false);
 
         }
 
@@ -2652,12 +2655,12 @@ namespace DesignerAssets
         /// </summary>
         private void localEvaluationPhysics()
         {
-
             // if there is a current evaluation
             if (physics != null)
             {
 
                 // increment time and apply forces
+                ShowTestStandEvaluation(true);
                 simTime += Time.fixedDeltaTime;
                 physics.AddAutoPilot();
                 physics.AddMotorAndFoilForce();
@@ -2774,8 +2777,23 @@ namespace DesignerAssets
             GameObject.Find("groundplate").GetComponent<MeshRenderer>().enabled = visible;
             GameObject.Find("leftside").GetComponent<MeshRenderer>().enabled = visible;
             GameObject.Find("rightside").GetComponent<MeshRenderer>().enabled = visible;
+            GameObject.Find("topplate").GetComponent<MeshRenderer>().enabled = visible;
         }
-        
+
+        /// <summary>
+        /// 
+        /// shows the test stand with a bottom plate and side walls for evaluation results
+        /// 
+        /// </summary>
+        /// <param name="visible"></param>
+        public void ShowTestStandEvaluation(bool visible)
+        {
+            GameObject.Find("groundplateevaluation").GetComponent<MeshRenderer>().enabled = visible;
+            GameObject.Find("leftsideevaluation").GetComponent<MeshRenderer>().enabled = visible;
+            GameObject.Find("rightsideevaluation").GetComponent<MeshRenderer>().enabled = visible;
+            GameObject.Find("topplateevaluation").GetComponent<MeshRenderer>().enabled = visible;
+        }
+
         /// <summary>
         /// 
         /// removes the physical vehicle objects by removing all prototype 
