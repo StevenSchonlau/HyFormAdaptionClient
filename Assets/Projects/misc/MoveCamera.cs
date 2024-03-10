@@ -42,6 +42,8 @@ public class MoveCamera : MonoBehaviour
     /// </summary>
     private bool isZooming;
     private float zoomDepth = 0.0f;
+    private float zoomMinDist = 30.0f;
+    private float zoomMaxDist = 100.0f; // > 50 recommended
 
     /// <summary>
     /// locks the view for dragging operations
@@ -139,17 +141,19 @@ public class MoveCamera : MonoBehaviour
             transform.Translate(move, Space.Self);
         }
 
-        // move the camera linearly along Z axis
+        // zoom camera in and out
         if (isZooming && !orthView)
         {
-            //Vector3 pos = Camera.main.ScreenToViewportPoint(Input.mousePosition - mouseOrigin);
-            //Debug.Log(Input.mouseScrollDelta.y);
             float deltaScroll = Input.mouseScrollDelta.y;
-            if (!(zoomDepth + deltaScroll > 40 || zoomDepth + deltaScroll < -70))
+            if (zoomMinDist < Vector3.Distance(Camera.main.transform.position, new Vector3(0f, 0f, 0f)) && deltaScroll > 0) //min distance, zooming in
             {
                 zoomDepth += deltaScroll;
-                Debug.Log(zoomDepth);
-                Vector3 move = Input.mouseScrollDelta.y * zoomSpeed * transform.forward;//pos.y * zoomSpeed * transform.forward;
+                Vector3 move = Input.mouseScrollDelta.y * zoomSpeed * transform.forward;
+                transform.Translate(move, Space.World);
+            }
+            if (zoomMaxDist > Vector3.Distance(Camera.main.transform.position, new Vector3(0f, 0f, 0f)) && deltaScroll < 0) { //max distance, zooming out
+                zoomDepth += deltaScroll;
+                Vector3 move = Input.mouseScrollDelta.y * zoomSpeed * transform.forward;
                 transform.Translate(move, Space.World);
             }
         }

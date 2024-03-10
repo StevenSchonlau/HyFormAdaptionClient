@@ -66,6 +66,7 @@ public class StartupMono : MonoBehaviour
         if (designBase != null)
         {
             designBase.AddComponent<DesignerAssets.UAVDesigner>();
+            designBase.AddComponent<LevelManagement>();
         }
 
         //GameObject planBase = GameObject.Find("groundcube");

@@ -39,6 +39,8 @@ namespace DesignerAssets
     /// ^ab : edge : first char is the starting node id and the second char is the ending node id
     /// ,5,3 : capacity in pounds and the controller index, currently the controller index is not used
     /// 
+    /// NOTE: Elements must be adjacent to each other by 1 space
+    /// 
     /// </summary>
     public class UAVDesigner : MonoBehaviour
     {
@@ -197,6 +199,8 @@ namespace DesignerAssets
         /// for now, we will keep this as the base design though
         /// 
         /// </summary>
+        
+        //public static string BASEVEHICLECONFIG = "*aMM0+++++*bNM2+++*cMN1+++*dLM2+++*eML1+++*fMK1+++^ab^ac^ad^ae^ef,5,3"; EXTRA NODE
         public static string BASEVEHICLECONFIG = "*aMM0+++++*bNM2+++*cMN1+++*dLM2+++*eML1+++^ab^ac^ad^ae,5,3";
 
         /// <summary>
@@ -273,6 +277,8 @@ namespace DesignerAssets
 
         public GameObject selObj;
 
+        public LevelManagement lm;
+
         // tooltip variables
         private string tooltip = " ";
         private Rect tooltipRect = new Rect(0, 0, 65, 25);
@@ -330,9 +336,10 @@ namespace DesignerAssets
             ResetView();
 
             // initialize the first joint and set the base design
-            Initialize();
-            fromstring(BASEVEHICLECONFIG);
-            updateHistory(BASEVEHICLECONFIG);
+            //Initialize();
+
+            //fromstring(BASEVEHICLECONFIG);
+            //updateHistory(BASEVEHICLECONFIG);
 
             // load save vehicles and load bse gui vehicle
             DataInterface.GetVehicles();
@@ -358,7 +365,7 @@ namespace DesignerAssets
         /// initializes the scene
         /// 
         /// </summary>
-        void Initialize()
+        public void Initialize(string designString, bool restartHist)
         {
 
             // sets the joint index counter to 0
@@ -380,9 +387,20 @@ namespace DesignerAssets
                     Destroy(connection);
             }
 
+            if (restartHist)
+            {
+                //reset history
+                history = new List<string>();
+                historyIndex = 0;
+            }
+
             // set the initial base joint
             addStartingJoint();
-
+            if (designString != "-")
+            {
+                fromstring(designString);
+                updateHistory(designString);
+            }
         }
 
         /// <summary>
@@ -932,23 +950,22 @@ namespace DesignerAssets
                     GameObject selected = hitInfo.transform.gameObject;
                     playClick();
                     selObj = selected;
-                    //string[] result = leftClickSelected(selected);
+                    string[] result = leftClickSelected(selected);
 
-                    // if change in assembly
-                    //if (!result.Equals(NOEVENT))
-                    //{
-                     //   string s = generatestring();
-                    //    updateHistory(s);
-                     ///   playClick();
-                     //   Capture.Log("MouseClick;" + result[0] + ";" + s + ";" + result[1], Capture.DESIGNER);
-//
-  //                      Debug.Log(result[0]);
-   //                     if (tutorialStep == 1 && result[0].Contains("Toggle"))
-    //                        toggleTutorial();
-     //                   if (tutorialStep == 2 && result[0].Contains("AssemblyChange"))
-      //                      toggleTutorial();
+                    //if change in assembly
+                    if (!result.Equals(NOEVENT))
+                    {
+                       string s = generatestring();
+                        updateHistory(s);
+                       playClick();
+                       Capture.Log("MouseClick;" + result[0] + ";" + s + ";" + result[1], Capture.DESIGNER);
 
-        //            }
+                        Debug.Log(result[0]);
+                       if (tutorialStep == 1 && result[0].Contains("Toggle"))
+                          toggleTutorial();
+                       if (tutorialStep == 2 && result[0].Contains("AssemblyChange"))
+                           toggleTutorial();
+                       }
 
                 }
             }
@@ -2310,7 +2327,7 @@ namespace DesignerAssets
                 }
 
                 // reset to the base joint
-                Initialize();
+                Initialize("-", false);
 
                 // add all connections
                 for (int i = 0; i < maxConnectionStepIndex + 1; i++)

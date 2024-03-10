@@ -544,9 +544,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b5e7268a76e307348ac4440c14c106ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  turnSpeed: 4
-  panSpeed: 1
-  zoomSpeed: 1
+  turnSpeed: 7
+  maxSpeedX: 4
+  panSpeed: 2
+  zoomSpeed: 14
 --- !u!45 &35075920
 Skybox:
   m_ObjectHideFlags: 0
@@ -1984,7 +1985,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3f1cdea60e9eb09498085501534186a4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  componentType: 4
+  componentType: 0
 --- !u!1 &141243652
 GameObject:
   m_ObjectHideFlags: 0
@@ -10476,7 +10477,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3f1cdea60e9eb09498085501534186a4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  componentType: 1
+  componentType: 0
 --- !u!1 &1279795156
 GameObject:
   m_ObjectHideFlags: 0
@@ -11653,7 +11654,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3f1cdea60e9eb09498085501534186a4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  componentType: 2
+  componentType: 0
 --- !u!1 &1394063866
 GameObject:
   m_ObjectHideFlags: 0
@@ -11737,7 +11738,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3f1cdea60e9eb09498085501534186a4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  componentType: 3
+  componentType: 0
 --- !u!1 &1438973306
 GameObject:
   m_ObjectHideFlags: 0
