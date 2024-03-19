@@ -287,10 +287,10 @@ namespace DesignerAssets
         private Rect resetDesignRect = new Rect(70, 10, 28, 28);
         private Rect undoRect = new Rect(10, 10, 28, 28);
         private Rect redoRect = new Rect(40, 10, 28, 28);
-        private Rect evalRect = new Rect(20, 100, 100, 25);
+        private Rect evalRect = new Rect(20, 142, 100, 25);
         private Rect submitRect = new Rect(340, 180, 100, 25);
         private Rect designModePopopRect = new Rect(224, 180, 100, 25);
-        private Rect aiRect = new Rect(128, 100, 28, 28);
+        private Rect aiRect = new Rect(128, 140, 28, 28);
         //private Rect dronebotRect = new Rect(160, 100, 28, 28);
         private Rect dbRect;
         private Rect loadBoxRect = new Rect(0, 0, 1, 1);
@@ -299,6 +299,13 @@ namespace DesignerAssets
         private bool shockConstraintHit = false;
 
         private int theCapacity = 10;
+        private int theCost;
+        private int theRange;
+        private int theSpeed;
+
+        private int theCurCost = -1;
+        private int theCurRange = -1;
+        private int theCurSpeed = -1;
 
 
         /// <summary>
@@ -369,9 +376,12 @@ namespace DesignerAssets
         /// initializes the scene
         /// 
         /// </summary>
-        public void Initialize(string designString, bool restartHist, int theCapacity)
+        public void Initialize(string designString, bool restartHist, int[] criteria)
         {
-            this.theCapacity = theCapacity;
+            this.theRange = criteria[0];
+            this.theCapacity = criteria[1];
+            this.theCost = criteria[2];
+            this.theSpeed = criteria[3];
             capacityStr = theCapacity.ToString();
             ShowTestStandEvaluation(false);
             // sets the joint index counter to 0
@@ -551,11 +561,14 @@ namespace DesignerAssets
             GameObject.Find(AICANVASPANEL).GetComponent<Canvas>().enabled = false;
 
             // show a box around the capacity and evaluate controls
-            GUI.Box(new Rect(10, 50, 154, 92), "");
+            GUI.Box(new Rect(10, 50, 200, 125), "");
 
             // capacity label and input
             GUI.color = Color.white;
-            GUI.Label(new Rect(20, 60, 120, 25), "Capacity (lb): " + theCapacity.ToString());
+            GUI.Label(new Rect(20, 60, 240, 25), "Capacity (lb): " + theCapacity.ToString());
+            GUI.Label(new Rect(20, 80, 240, 25), "Speed (m/s): " + theSpeed.ToString() + "   Current: " + theCurSpeed.ToString());
+            GUI.Label(new Rect(20, 100, 240, 25), "Cost ($): " + theCost.ToString() + "   Current: " + theCurCost.ToString());
+            GUI.Label(new Rect(20, 120, 240, 25), "Range (mi): " + theRange.ToString() + "   Current: " + theCurRange.ToString());
             //capacityStr = GUI.TextField(new Rect(110, 62, 28, 25), capacityStr + "", 2);
             //bool text_change = false;
             //if (!capacityStr.Equals(previousCapacityStr))
@@ -572,7 +585,7 @@ namespace DesignerAssets
             //{
             //    int capacity = i;
 
-                // bound the payload
+            // bound the payload
             //    capacity = Math.Max(0, capacity);
             //    capacityStr = "" + capacity;
             //    previousCapacityStr = capacityStr;
@@ -2333,7 +2346,8 @@ namespace DesignerAssets
                 }
 
                 // reset to the base joint
-                Initialize("-", false, theCapacity);
+                int[] criteria = new int[4] { theRange, theCapacity, theCost, theSpeed };
+                Initialize("-", false, criteria);
 
                 // add all connections
                 for (int i = 0; i < maxConnectionStepIndex + 1; i++)
@@ -2539,6 +2553,9 @@ namespace DesignerAssets
                 + delimiter + "capacity(lb) = " + capacity 
                 + delimiter + "cost($) = " + cost.ToString("0") 
                 + delimiter + "velocity(mph) = " + velocity.ToString("0.00");
+            this.theCurRange = Convert.ToInt32(range);
+            this.theCurCost = Convert.ToInt32(cost);
+            this.theCurSpeed = Convert.ToInt32(velocity);
             if (config != null)
                 result += delimiter + config;
             return result;

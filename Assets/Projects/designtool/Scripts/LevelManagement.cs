@@ -71,7 +71,8 @@ public class LevelManagement : MonoBehaviour
     IEnumerator levelWait()
     {
         //run level
-        uavd.Initialize(BASEVEHICLECONFIG, true, criteria[theLevel.level,1]);
+        int[] theCriteria = new int[4] { criteria[theLevel.level, 0], criteria[theLevel.level, 1], criteria[theLevel.level, 2], criteria[theLevel.level, 3] };
+        uavd.Initialize(BASEVEHICLECONFIG, true, theCriteria);
         yield return new WaitForSeconds(timeLimit);
         levelEnd();
     }
