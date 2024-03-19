@@ -7,14 +7,26 @@ public class LevelManagement : MonoBehaviour
 {
     //This class will automatically create and switch between level objects
 
-    public int timeLimit = 10; //seconds of the level
+    public int timeLimit = 120; //seconds of the level
 
-    public int numLevels = 35;
+    public const int numLevels = 6;
     public iLevel theLevel;
 
     public static string BASEVEHICLECONFIG = "*aMM0+++++*bNM2+++*cMN1+++*dLM2+++*eML1+++^ab^ac^ad^ae,5,3";
 
     public UAVDesigner uavd;
+
+    public int[,] criteria = new int[numLevels, 4]
+    {
+        //range, capacity, cost, velocity
+        {10, 5, 3470, 20},
+        {0, 15, 0, 0},
+        {0, 10, 0, 0},
+        {0, 7, 0, 0},
+        {0, 20, 0, 0},
+        {0, 23, 0, 0}
+    };
+        
 
     public void randomizeCriteria()
     {
@@ -30,8 +42,7 @@ public class LevelManagement : MonoBehaviour
     void Awake()
     {
         uavd = GameObject.FindObjectOfType(typeof(UAVDesigner)) as UAVDesigner;
-
-        theLevel = new iLevel(1);
+        theLevel = new iLevel(0);
         Debug.Log("Started!");
         StartCoroutine(levelWait());
     }
@@ -60,8 +71,7 @@ public class LevelManagement : MonoBehaviour
     IEnumerator levelWait()
     {
         //run level
-        //need to figure out how to reference
-        uavd.Initialize(BASEVEHICLECONFIG, true);
+        uavd.Initialize(BASEVEHICLECONFIG, true, criteria[theLevel.level,1]);
         yield return new WaitForSeconds(timeLimit);
         levelEnd();
     }

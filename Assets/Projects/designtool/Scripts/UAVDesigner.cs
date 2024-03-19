@@ -298,6 +298,9 @@ namespace DesignerAssets
         private bool setShock = true;
         private bool shockConstraintHit = false;
 
+        private int theCapacity = 10;
+
+
         /// <summary>
         /// 
         /// tutorial step
@@ -366,9 +369,10 @@ namespace DesignerAssets
         /// initializes the scene
         /// 
         /// </summary>
-        public void Initialize(string designString, bool restartHist)
+        public void Initialize(string designString, bool restartHist, int theCapacity)
         {
-
+            this.theCapacity = theCapacity;
+            capacityStr = theCapacity.ToString();
             ShowTestStandEvaluation(false);
             // sets the joint index counter to 0
             JointInfo.counter = 0;
@@ -551,33 +555,33 @@ namespace DesignerAssets
 
             // capacity label and input
             GUI.color = Color.white;
-            GUI.Label(new Rect(20, 60, 120, 25), "Capacity (lb)");
-            capacityStr = GUI.TextField(new Rect(110, 62, 28, 25), capacityStr + "", 2);
-            bool text_change = false;
-            if (!capacityStr.Equals(previousCapacityStr))
-            {
-                Capture.Log("CapacityInput;" + capacityStr, Capture.DESIGNER);
-                previousCapacityStr = capacityStr;
-                text_change = true;
-            }
+            GUI.Label(new Rect(20, 60, 120, 25), "Capacity (lb): " + theCapacity.ToString());
+            //capacityStr = GUI.TextField(new Rect(110, 62, 28, 25), capacityStr + "", 2);
+            //bool text_change = false;
+            //if (!capacityStr.Equals(previousCapacityStr))
+            //{
+            //    Capture.Log("CapacityInput;" + capacityStr, Capture.DESIGNER);
+            //    previousCapacityStr = capacityStr;
+            //    text_change = true;
+            //}
 
             // bound the capacity
-            int i = 0;
-            bool validCapacity = int.TryParse(capacityStr, out i);
-            if (validCapacity)
-            {
-                int capacity = i;
+            //int i = 0;
+            //bool validCapacity = int.TryParse(capacityStr, out i);
+            //if (validCapacity)
+            //{
+            //    int capacity = i;
 
                 // bound the payload
-                capacity = Math.Max(0, capacity);
-                capacityStr = "" + capacity;
-                previousCapacityStr = capacityStr;
-            }
+            //    capacity = Math.Max(0, capacity);
+            //    capacityStr = "" + capacity;
+            //    previousCapacityStr = capacityStr;
+            //}
 
-            if (validCapacity && text_change && tutorialStep == 7)
-            {
-                toggleTutorial();
-            }
+            //if (validCapacity && text_change && tutorialStep == 7)
+            //{
+            //    toggleTutorial();
+            //}
 
             // create right side team designs list
             GUI.Box(loadBoxRect, new GUIContent("Team Designs", ""));
@@ -620,8 +624,8 @@ namespace DesignerAssets
             GUI.EndScrollView();
 
             // evaluate button for a valid design
-            if (validCapacity)
-            {
+            //if (validCapacity)
+            //{
                 if (GUI.Button(evalRect, new GUIContent("Evaluate", "Evaluate the Design Performance in a Test Environment")))
                 {
                     checkForConstraint();
@@ -644,7 +648,7 @@ namespace DesignerAssets
                     ShowMsg("Evaluating ...", false);
                     playClick();
                 }
-            }
+            //}
 
             // add an undo button to revert to previous history
             if (GUI.Button(undoRect, new GUIContent(undoimage, "Undo")))
@@ -707,7 +711,7 @@ namespace DesignerAssets
 
             // if the session allows for AI and there is a valid capacity value entered,
             // show the AI button
-            if (Startup.isAI && validCapacity)
+            if (Startup.isAI) //&& validCapacity)
             {
                 if (GUI.Button(aiRect, new GUIContent(aiimage, "AI Agent to Generate Design Alternatives")))
                 {
@@ -989,8 +993,6 @@ namespace DesignerAssets
                 if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo, 100.0f))
                 {
                     GameObject selected = hitInfo.transform.gameObject;
-                    if (selected = selObj.transform.gameObject)
-                    {
                         scaleUpComponentAtJoint(selected);
 
                         string s = generatestring();
@@ -1000,7 +1002,7 @@ namespace DesignerAssets
 
                         if (tutorialStep == 5)
                             toggleTutorial();
-                    }
+                    
 
                 }
             }
@@ -1463,15 +1465,16 @@ namespace DesignerAssets
 
             string[] typeAction = new string[] { NOEVENT, "" };
 
-            // check for left click on joint handle
-            if (selected.name.StartsWith(JOINT))
-            {
-                JointInfo.UAVComponentType componentType = JointInfo.getNextComponentType(jointGraph[selected].componentType);
-                typeAction[0] = "ToggleComponent";
-                typeAction = changeJointToComponent(selected, componentType);
-            }
+            // check for left click on joint handle - took out for -12345
+            //if (selected.name.StartsWith(JOINT))
+            //{
+            //    JointInfo.UAVComponentType componentType = JointInfo.getNextComponentType(jointGraph[selected].componentType);
+            //    typeAction[0] = "ToggleComponent";
+            //    typeAction = changeJointToComponent(selected, componentType);
+            //}
             // check for left click on assembly handle
-            else if (selected.name.Equals(POSITIVEZ) ||
+            //else 
+            if (selected.name.Equals(POSITIVEZ) ||
                 selected.name.Equals(NEGATIVEZ) ||
                 selected.name.Equals(POSITIVEX) ||
                 selected.name.Equals(NEGATIVEX))
@@ -2330,7 +2333,7 @@ namespace DesignerAssets
                 }
 
                 // reset to the base joint
-                Initialize("-", false);
+                Initialize("-", false, theCapacity);
 
                 // add all connections
                 for (int i = 0; i < maxConnectionStepIndex + 1; i++)
