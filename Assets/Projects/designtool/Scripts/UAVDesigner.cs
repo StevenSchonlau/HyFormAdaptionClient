@@ -566,9 +566,33 @@ namespace DesignerAssets
             // capacity label and input
             GUI.color = Color.white;
             GUI.Label(new Rect(20, 60, 240, 25), "Capacity (lb): " + theCapacity.ToString());
+            if (theSpeed > theCurSpeed)
+            {
+                GUI.color = Color.red;
+            }
+            else
+            {
+                GUI.color = Color.green;
+            }
             GUI.Label(new Rect(20, 80, 240, 25), "Speed (m/s): " + theSpeed.ToString() + "   Current: " + theCurSpeed.ToString());
+            if (theCost > theCurCost)
+            {
+                GUI.color = Color.red;
+            }
+            else
+            {
+                GUI.color = Color.green;
+            }
             GUI.Label(new Rect(20, 100, 240, 25), "Cost ($): " + theCost.ToString() + "   Current: " + theCurCost.ToString());
+            if (theRange > theCurRange)
+            {
+                GUI.color = Color.red;
+            } else
+            {
+                GUI.color = Color.green;
+            }
             GUI.Label(new Rect(20, 120, 240, 25), "Range (mi): " + theRange.ToString() + "   Current: " + theCurRange.ToString());
+            GUI.color = Color.white;
             //capacityStr = GUI.TextField(new Rect(110, 62, 28, 25), capacityStr + "", 2);
             //bool text_change = false;
             //if (!capacityStr.Equals(previousCapacityStr))
@@ -597,14 +621,14 @@ namespace DesignerAssets
             //}
 
             // create right side team designs list
-            GUI.Box(loadBoxRect, new GUIContent("Team Designs", ""));
-            int heightScroll = (int) Math.Max(rect.height - 120, 200);
-            loadBoxRect = new Rect(Screen.width - 184 - xbuffer, ybuffer, 184, heightScroll);
-            GUI.skin.box.fontSize = 18;
+            //GUI.Box(loadBoxRect, new GUIContent("Team Designs", ""));
+            //int heightScroll = (int) Math.Max(rect.height - 120, 200);
+            //loadBoxRect = new Rect(Screen.width - 184 - xbuffer, ybuffer, 184, heightScroll);
+            //GUI.skin.box.fontSize = 18;
 
             // add a button to manually auto refresh the team design database (that will now also 
             // get auto refreshed, so we may be able to just remove this button)
-            dbRect = new Rect(Screen.width - 188, 4, 24, 24);
+            /*dbRect = new Rect(Screen.width - 188, 4, 24, 24);
             if (GUI.Button(dbRect, new GUIContent(dbloadimage, "Load Designs from Your Team")))
             {
                 DataInterface.GetVehicles();
@@ -632,14 +656,14 @@ namespace DesignerAssets
 
                 GUI.color = Color.white;
                 counter += 1;
-            }
+            }*/
             // End the scroll view that we began above
-            GUI.EndScrollView();
+            //GUI.EndScrollView();
 
             // evaluate button for a valid design
             //if (validCapacity)
             //{
-                if (GUI.Button(evalRect, new GUIContent("Evaluate", "Evaluate the Design Performance in a Test Environment")))
+            if (GUI.Button(evalRect, new GUIContent("Evaluate", "Evaluate the Design Performance in a Test Environment")))
                 {
                     checkForConstraint();
                     if (shockConstraintHit)
@@ -803,18 +827,18 @@ namespace DesignerAssets
                 }
 
                 // if successful evaluation, show the Submit button
-                if (successfulRun)
-                    if (GUI.Button(submitRect, new GUIContent("Submit", "Submit the Design to Your Team")))
-                    {
-                        // show the popup controls to submit a design with a tag
-                        designtag = "";
-                        GameObject.Find(SUBMITINPUTTAG).GetComponent<TMP_InputField>().text = "r" + (int)lastOutput.range + "_c" + capacityStr + "_$" + (int)lastOutput.cost;
-
-
-                        GUIAssets.PopupButton.popupPanelID = SUBMITDESIGNCANVAS;
-                        GUIAssets.PopupButton.showing = true;
-                        GameObject.Find(SUBMITDESIGNCANVAS).GetComponent<Canvas>().enabled = true;
-                    }
+                //if (successfulRun)
+                //    if (GUI.Button(submitRect, new GUIContent("Submit", "Submit the Design to Your Team")))
+                //    {
+                //        // show the popup controls to submit a design with a tag
+                //        designtag = "";
+                //        GameObject.Find(SUBMITINPUTTAG).GetComponent<TMP_InputField>().text = "r" + (int)lastOutput.range + "_c" + capacityStr + "_$" + (int)lastOutput.cost;
+                //
+                //
+                //        GUIAssets.PopupButton.popupPanelID = SUBMITDESIGNCANVAS;
+                //        GUIAssets.PopupButton.showing = true;
+                //        GameObject.Find(SUBMITDESIGNCANVAS).GetComponent<Canvas>().enabled = true;
+                //    }
 
             }
 
