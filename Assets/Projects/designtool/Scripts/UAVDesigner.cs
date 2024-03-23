@@ -307,6 +307,10 @@ namespace DesignerAssets
         private int theCurRange = -1;
         private int theCurSpeed = -1;
 
+        private bool last10Seconds = false;
+        private int seconds;
+        private bool paused = false;
+        private Action resumeFuncPointer = null;
 
         /// <summary>
         /// 
@@ -345,13 +349,6 @@ namespace DesignerAssets
             // reset the view position
             ResetView();
 
-
-            // initialize the first joint and set the base design
-            //Initialize();
-
-            //fromstring(BASEVEHICLECONFIG);
-            //updateHistory(BASEVEHICLECONFIG);
-
             // load save vehicles and load bse gui vehicle
             DataInterface.GetVehicles();
 
@@ -378,6 +375,7 @@ namespace DesignerAssets
         /// </summary>
         public void Initialize(string designString, bool restartHist, int[] criteria)
         {
+            this.last10Seconds = false;
             this.theRange = criteria[0];
             this.theCapacity = criteria[1];
             this.theCost = criteria[2];
@@ -480,8 +478,9 @@ namespace DesignerAssets
                 !showingEvaluationMode && 
                 !aiMode && 
                 !GUIAssets.PopupButton.showing && !GameObject.Find(OPENDESIGNPOPUPCONFIRM).GetComponent<Canvas>().enabled;
-
-            if (designMode)
+            if (paused)
+                onGUIPauseMode();
+            else if (designMode)
                 onGUIDesignMode();
             else if (showingEvaluationMode)
                 onGUIShowEvalutionMode();
@@ -507,6 +506,23 @@ namespace DesignerAssets
 
             // bottom log string
             GUI.Label(new Rect(10, Screen.height - 36, Screen.width - 200, 36), "" + bottomLogString);
+
+            if (last10Seconds)
+            {
+                GUI.color = Color.red;
+                GUIStyle fontChange = new GUIStyle();
+                fontChange.fontSize = 40;
+                fontChange.normal.textColor = Color.red;
+                GUI.Label(new Rect(Screen.width / 2 - 150, Screen.height - 50, Screen.width / 2, 70), "10 Seconds Left!", fontChange);
+                GUI.color = Color.white;
+                
+            }
+
+
+            GUI.Box(new Rect(Screen.width - 120, 55, 100, 30), "");
+            GUI.color = Color.red;
+            GUI.Label(new Rect(Screen.width - 110, 60, 110, 20), "Time Left:  " + seconds.ToString());
+            GUI.color = Color.white;
 
             // flip text labels if needed
             foreach (GameObject obj in jointGraph.Keys)
@@ -538,6 +554,57 @@ namespace DesignerAssets
             }
             GUI.Label(tooltipRect, tooltip);
 
+        }
+
+        void onGUIPauseMode()
+        {
+
+            Rect rect = Camera.main.pixelRect;
+            GUI.contentColor = Color.white;
+
+            GUI.Box(new Rect(0, 0, Screen.width, Screen.height), "");
+            if (GUI.Button(new Rect(Screen.width / 2-50, Screen.height / 2+40, 100, 50), new GUIContent("Next Round", "Proceed to the next round")))
+            {
+                resume();
+            }
+            GUIStyle fontChange = new GUIStyle();
+            fontChange.fontSize = 40;
+            fontChange.alignment = TextAnchor.UpperCenter;
+            GUI.Label(new Rect(Screen.width / 2 - 70, 40, 140, 25), "Next Level Constraints", fontChange);
+            GUI.Label(new Rect(Screen.width/2-70, 90, 140, 25), "Capacity (lb): " + theCapacity.ToString(), fontChange);
+            GUI.Label(new Rect(Screen.width/2-70, 140, 140, 25), "Speed (m/s): " + theSpeed.ToString(), fontChange);
+            GUI.Label(new Rect(Screen.width/2-70, 190, 140, 25), "Cost ($): " + theCost.ToString(), fontChange);
+            GUI.Label(new Rect(Screen.width/2-70, 240, 140, 25), "Range (mi): " + theRange.ToString(), fontChange);
+        }
+        
+        
+        public void Warning10Seconds()
+        {
+            last10Seconds = true;
+        }
+
+        public void pause(int[] criteria, Action resumeFuncPointer)
+        {
+            this.last10Seconds = false;
+            this.theRange = criteria[0];
+            this.theCapacity = criteria[1];
+            this.theCost = criteria[2];
+            this.theSpeed = criteria[3];
+            this.paused = true;
+            this.resumeFuncPointer = resumeFuncPointer;
+
+        }
+
+        public void resume()
+        {
+            paused = false;
+            resumeFuncPointer();
+            ResetDesignModeView();
+        }
+
+        public void UpdateSecond(int theSecond)
+        {
+            seconds = theSecond;
         }
 
         /// <summary>
@@ -593,99 +660,29 @@ namespace DesignerAssets
             }
             GUI.Label(new Rect(20, 120, 240, 25), "Range (mi): " + theRange.ToString() + "   Current: " + theCurRange.ToString());
             GUI.color = Color.white;
-            //capacityStr = GUI.TextField(new Rect(110, 62, 28, 25), capacityStr + "", 2);
-            //bool text_change = false;
-            //if (!capacityStr.Equals(previousCapacityStr))
-            //{
-            //    Capture.Log("CapacityInput;" + capacityStr, Capture.DESIGNER);
-            //    previousCapacityStr = capacityStr;
-            //    text_change = true;
-            //}
-
-            // bound the capacity
-            //int i = 0;
-            //bool validCapacity = int.TryParse(capacityStr, out i);
-            //if (validCapacity)
-            //{
-            //    int capacity = i;
-
-            // bound the payload
-            //    capacity = Math.Max(0, capacity);
-            //    capacityStr = "" + capacity;
-            //    previousCapacityStr = capacityStr;
-            //}
-
-            //if (validCapacity && text_change && tutorialStep == 7)
-            //{
-            //    toggleTutorial();
-            //}
-
-            // create right side team designs list
-            //GUI.Box(loadBoxRect, new GUIContent("Team Designs", ""));
-            //int heightScroll = (int) Math.Max(rect.height - 120, 200);
-            //loadBoxRect = new Rect(Screen.width - 184 - xbuffer, ybuffer, 184, heightScroll);
-            //GUI.skin.box.fontSize = 18;
-
-            // add a button to manually auto refresh the team design database (that will now also 
-            // get auto refreshed, so we may be able to just remove this button)
-            /*dbRect = new Rect(Screen.width - 188, 4, 24, 24);
-            if (GUI.Button(dbRect, new GUIContent(dbloadimage, "Load Designs from Your Team")))
+            
+            if (GUI.Button(evalRect, new GUIContent("Evaluate", "Evaluate the Design Performance in a Test Environment")))
             {
-                DataInterface.GetVehicles();
-                Capture.Log("LoadVehicles", Capture.DESIGNER);
+                checkForConstraint();
+                if (shockConstraintHit)
+                {
+                    ShowMsg("Design Hits Size Constraints", true);
+                    Capture.Log("NoEvaluateBasedOnConstraint;" + generatestring(), Capture.DESIGNER);
+                    return;
+                }
+
+                if (tutorialStep == 9)
+                {
+                    toggleTutorial();
+                }
+
+                aiRun = false;
+                // runServerEvaluation();
+                runLocalEvaluation();
+                Capture.Log("Evaluate;" + generatestring(), Capture.DESIGNER);
+                ShowMsg("Evaluating ...", false);
                 playClick();
             }
-
-            // add scroll window with the right panel
-            int counter = 0;
-            scrollPosition = GUI.BeginScrollView(new Rect(rect.width - 184, 40, 184, heightScroll - 40), scrollPosition, new Rect(0, 0, 184, teamDesigns.Count * 24 + 100));
-            foreach (Vehicle s in teamDesigns)
-            {
-                // add button to open a design
-                if (!s.valid)
-                {
-                    GUI.color = new Color(1.0f, 0.4f, 0.0f);
-                }
-
-                if (GUI.Button(new Rect(0, 0 + counter * 24, 164, 20), new GUIContent(s.tag, "Select to Open : " + s.tag + "\n" + s.range.ToString("0.0") + " mi\n" + s.payload.ToString("0") + " lb\n$" + UAVDesigner.getShockCost(s.cost).ToString("0") + "\n" + s.velocity.ToString("0.0") + " mph")))
-                {
-                    GUIAssets.PopupButton.popupPanelID = OPENDESIGNPOPUPCONFIRM;
-                    GUIAssets.PopupButton.storedData = OPENDESIGN + ";" + s.tag + ";" + s.config + ";" + s.range.ToString("0.00") + ";" + s.payload.ToString("0") + ";" + UAVDesigner.getShockCost(s.cost).ToString("0") + ";" + s.velocity.ToString("0.00") + ";" + s.id + ";" + s.valid;
-                    GameObject.Find(OPENDESIGNPOPUPCONFIRM).GetComponent<Canvas>().enabled = true;
-                }
-
-                GUI.color = Color.white;
-                counter += 1;
-            }*/
-            // End the scroll view that we began above
-            //GUI.EndScrollView();
-
-            // evaluate button for a valid design
-            //if (validCapacity)
-            //{
-            if (GUI.Button(evalRect, new GUIContent("Evaluate", "Evaluate the Design Performance in a Test Environment")))
-                {
-                    checkForConstraint();
-                    if (shockConstraintHit)
-                    {
-                        ShowMsg("Design Hits Size Constraints", true);
-                        Capture.Log("NoEvaluateBasedOnConstraint;" + generatestring(), Capture.DESIGNER);
-                        return;
-                    }
-
-                    if (tutorialStep == 9)
-                    {
-                        toggleTutorial();
-                    }
-
-                    aiRun = false;
-                    // runServerEvaluation();
-                    runLocalEvaluation();
-                    Capture.Log("Evaluate;" + generatestring(), Capture.DESIGNER);
-                    ShowMsg("Evaluating ...", false);
-                    playClick();
-                }
-            //}
 
             // add an undo button to revert to previous history
             if (GUI.Button(undoRect, new GUIContent(undoimage, "Undo")))
@@ -748,7 +745,7 @@ namespace DesignerAssets
 
             // if the session allows for AI and there is a valid capacity value entered,
             // show the AI button
-            if (Startup.isAI) //&& validCapacity)
+            if (Startup.isAI)
             {
                 if (GUI.Button(aiRect, new GUIContent(aiimage, "AI Agent to Generate Design Alternatives")))
                 {
@@ -825,20 +822,6 @@ namespace DesignerAssets
                         toggleTutorial();
 
                 }
-
-                // if successful evaluation, show the Submit button
-                //if (successfulRun)
-                //    if (GUI.Button(submitRect, new GUIContent("Submit", "Submit the Design to Your Team")))
-                //    {
-                //        // show the popup controls to submit a design with a tag
-                //        designtag = "";
-                //        GameObject.Find(SUBMITINPUTTAG).GetComponent<TMP_InputField>().text = "r" + (int)lastOutput.range + "_c" + capacityStr + "_$" + (int)lastOutput.cost;
-                //
-                //
-                //        GUIAssets.PopupButton.popupPanelID = SUBMITDESIGNCANVAS;
-                //        GUIAssets.PopupButton.showing = true;
-                //        GameObject.Find(SUBMITDESIGNCANVAS).GetComponent<Canvas>().enabled = true;
-                //    }
 
             }
 
@@ -953,83 +936,84 @@ namespace DesignerAssets
             checkForActionsFromOpenedPopups();
 
             // add key and mouse listeners
-
-            // add controls to toggle sounds
-            if (Input.GetKeyDown("s") && !GUIAssets.PopupButton.showing)
+            if (!paused)
             {
-                soundsOn = !soundsOn;
-                if (soundsOn)
-                    playClick();
-            }
-
-            // add controls to stop blade rotation
-            if (Input.GetKeyDown("r") && !GUIAssets.PopupButton.showing)
-                rotateMotors = !rotateMotors;
-
-            // add controls to start and stop music
-            if (Input.GetKeyDown("m") && !GUIAssets.PopupButton.showing)
-            { 
-                if (musicPaused)
-                    GameObject.Find("backgroundmusic").GetComponent<AudioSource>().Play();
-                else
-                    GameObject.Find("backgroundmusic").GetComponent<AudioSource>().Pause();
-                musicPaused = !musicPaused;
-            }
-
-            // left mouse click in design mode, leftshift check is to check for mousepad zoom
-            // and evaluating is to check for evaluation run
-            if (Input.GetMouseButtonDown(0) && !Input.GetKey(KeyCode.LeftShift) && !evaluating)
-            {
-
-                // hide popup results unless showing evaluation mode
-                if (!showingEvaluationMode)
-                    GameObject.Find(POPUPRESULTSPANEL).GetComponent<Canvas>().enabled = false;
-                
-                // check for a mouse selection that intesects a game object
-                RaycastHit hitInfo = new RaycastHit();
-                if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo, 1000.0f))
+                // add controls to toggle sounds
+                if (Input.GetKeyDown("s") && !GUIAssets.PopupButton.showing)
                 {
- 
-                    GameObject selected = hitInfo.transform.gameObject;
-                    playClick();
-                    selObj = selected;
-                    string[] result = leftClickSelected(selected);
+                    soundsOn = !soundsOn;
+                    if (soundsOn)
+                        playClick();
+                }
 
-                    //if change in assembly
-                    if (!result.Equals(NOEVENT))
+                // add controls to stop blade rotation
+                if (Input.GetKeyDown("r") && !GUIAssets.PopupButton.showing)
+                    rotateMotors = !rotateMotors;
+
+                // add controls to start and stop music
+                if (Input.GetKeyDown("m") && !GUIAssets.PopupButton.showing)
+                {
+                    if (musicPaused)
+                        GameObject.Find("backgroundmusic").GetComponent<AudioSource>().Play();
+                    else
+                        GameObject.Find("backgroundmusic").GetComponent<AudioSource>().Pause();
+                    musicPaused = !musicPaused;
+                }
+
+                // left mouse click in design mode, leftshift check is to check for mousepad zoom
+                // and evaluating is to check for evaluation run
+                if (Input.GetMouseButtonDown(0) && !Input.GetKey(KeyCode.LeftShift) && !evaluating)
+                {
+
+                    // hide popup results unless showing evaluation mode
+                    if (!showingEvaluationMode)
+                        GameObject.Find(POPUPRESULTSPANEL).GetComponent<Canvas>().enabled = false;
+
+                    // check for a mouse selection that intesects a game object
+                    RaycastHit hitInfo = new RaycastHit();
+                    if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo, 1000.0f))
                     {
-                       string s = generatestring();
-                        updateHistory(s);
-                       playClick();
-                       Capture.Log("MouseClick;" + result[0] + ";" + s + ";" + result[1], Capture.DESIGNER);
 
-                        Debug.Log(result[0]);
-                       if (tutorialStep == 1 && result[0].Contains("Toggle"))
-                          toggleTutorial();
-                       if (tutorialStep == 2 && result[0].Contains("AssemblyChange"))
-                           toggleTutorial();
-                       }
+                        GameObject selected = hitInfo.transform.gameObject;
+                        playClick();
+                        selObj = selected;
+                        string[] result = leftClickSelected(selected);
 
+                        //if change in assembly
+                        if (!result.Equals(NOEVENT))
+                        {
+                            string s = generatestring();
+                            updateHistory(s);
+                            playClick();
+                            Capture.Log("MouseClick;" + result[0] + ";" + s + ";" + result[1], Capture.DESIGNER);
+
+                            Debug.Log(result[0]);
+                            if (tutorialStep == 1 && result[0].Contains("Toggle"))
+                                toggleTutorial();
+                            if (tutorialStep == 2 && result[0].Contains("AssemblyChange"))
+                                toggleTutorial();
+                        }
+
+                    }
                 }
-            }
 
-            // if AI mode, check if an AI component is selected, mouse up seems to do
-            // better at avoiding any undesired selections
-            if (aiMode)
-            {
-                if (Input.GetMouseButtonUp(0))
+                // if AI mode, check if an AI component is selected, mouse up seems to do
+                // better at avoiding any undesired selections
+                if (aiMode)
                 {
-                    selectAIComponent();
+                    if (Input.GetMouseButtonUp(0))
+                    {
+                        selectAIComponent();
+                    }
                 }
-            }
 
-            // scale up component, either right mouse click or up arrow key
-            if ((Input.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.UpArrow)))
-            {
-                RaycastHit hitInfo = new RaycastHit();
-                if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo, 100.0f))
+                // scale up component, either right mouse click or up arrow key
+                if ((Input.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.UpArrow)))
                 {
-                    GameObject selected = hitInfo.transform.gameObject;
+                    RaycastHit hitInfo = new RaycastHit();
+                    if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo, 100.0f))
+                    {
+                        GameObject selected = hitInfo.transform.gameObject;
                         scaleUpComponentAtJoint(selected);
 
                         string s = generatestring();
@@ -1039,229 +1023,232 @@ namespace DesignerAssets
 
                         if (tutorialStep == 5)
                             toggleTutorial();
-                    
 
-                }
-            }
-
-            // scale down component, middle mouse click, down arrow key, or shift left click for mouse pad
-            if (Input.GetMouseButtonDown(2) || Input.GetKeyDown(KeyCode.DownArrow) 
-                || (Input.GetMouseButtonDown(0) && Input.GetKey(KeyCode.LeftShift)))
-            {
-                RaycastHit hitInfo = new RaycastHit();
-                if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo, 100.0f))
-                {
-                    GameObject selected = hitInfo.transform.gameObject;
-                    scaleDownComponentAtJoint(selected);
-
-                    string s = generatestring();
-                    updateHistory(s);
-                    playClick();
-                    Capture.Log((Input.GetKeyDown(KeyCode.DownArrow) ? "HotKeyScaleDown;" : "ScaleDown;") + s + ";" + getJointPositionStr(selected), Capture.DESIGNER);
-
-                    if (tutorialStep == 6)
-                        toggleTutorial();
-
-                }
-            }
-
-            // hot keys for component selection over a joint
-            bool key1Down = Input.GetKeyDown("1");
-            bool key2Down = Input.GetKeyDown("2");
-            bool key3Down = Input.GetKeyDown("3");
-            bool key4Down = Input.GetKeyDown("4");
-            bool key5Down = Input.GetKeyDown("5");
-            if (key1Down || key2Down || key3Down || key4Down || key5Down)
-            {
-                RaycastHit hitInfo = new RaycastHit();
-                if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo, 100.0f))
-                {
-                    GameObject selected = hitInfo.transform.gameObject;
-
-                    // check if over a joint
-                    if (selected.name.StartsWith(JOINT))
-                    {
-                        JointInfo.UAVComponentType comptype = JointInfo.UAVComponentType.Structure;
-                        string logInfo = "HotKeyComponentToStructure";
-
-                        if (key1Down)
-                        {
-                            comptype = JointInfo.UAVComponentType.Structure;
-                            logInfo = "HotKeyComponentToStructure";
-                        }
-                        else if (key2Down)
-                        {
-                            comptype = JointInfo.UAVComponentType.MotorCW;
-                            logInfo = "HotKeyComponentToMotorCW";
-                        }
-                        else if (key3Down)
-                        {
-                            comptype = JointInfo.UAVComponentType.MotorCCW;
-                            logInfo = "HotKeyComponentToMotorCCW";
-                        }
-                        else if (key4Down)
-                        {
-                            comptype = JointInfo.UAVComponentType.Foil;
-                            logInfo = "HotKeyComponentToFoil";
-                        }
-                        else if (key5Down)
-                        {
-                            comptype = JointInfo.UAVComponentType.None;
-                            logInfo = "HotKeyComponentToEmpty";
-                        }
-
-                        changeJointToComponent(selected, comptype);
-
-                        playClick();
-
-                        string s = generatestring();
-                        Capture.Log(logInfo + ";" + comptype.ToString() + ";" + s + ";" + getJointPositionStr(selected), Capture.DESIGNER);
-                        updateHistory(s);
 
                     }
                 }
-            }
 
-            // delete operation
-            if (Input.GetKeyDown("d"))
-            {
-
-                RaycastHit hitInfo = new RaycastHit();
-                if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo, 100.0f))
+                // scale down component, middle mouse click, down arrow key, or shift left click for mouse pad
+                if (Input.GetMouseButtonDown(2) || Input.GetKeyDown(KeyCode.DownArrow)
+                    || (Input.GetMouseButtonDown(0) && Input.GetKey(KeyCode.LeftShift)))
                 {
+                    RaycastHit hitInfo = new RaycastHit();
+                    if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo, 100.0f))
+                    {
+                        GameObject selected = hitInfo.transform.gameObject;
+                        scaleDownComponentAtJoint(selected);
 
-                    GameObject selected = hitInfo.transform.gameObject;
-                    if (selected) { 
+                        string s = generatestring();
+                        updateHistory(s);
+                        playClick();
+                        Capture.Log((Input.GetKeyDown(KeyCode.DownArrow) ? "HotKeyScaleDown;" : "ScaleDown;") + s + ";" + getJointPositionStr(selected), Capture.DESIGNER);
 
-                        // if mouse is over a joint
+                        if (tutorialStep == 6)
+                            toggleTutorial();
+
+                    }
+                }
+
+                // hot keys for component selection over a joint
+                bool key1Down = Input.GetKeyDown("1");
+                bool key2Down = Input.GetKeyDown("2");
+                bool key3Down = Input.GetKeyDown("3");
+                bool key4Down = Input.GetKeyDown("4");
+                bool key5Down = Input.GetKeyDown("5");
+                if (key1Down || key2Down || key3Down || key4Down || key5Down)
+                {
+                    RaycastHit hitInfo = new RaycastHit();
+                    if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo, 100.0f))
+                    {
+                        GameObject selected = hitInfo.transform.gameObject;
+
+                        // check if over a joint
                         if (selected.name.StartsWith(JOINT))
                         {
-                            // hide the results panel
-                            GameObject.Find(POPUPRESULTSPANEL).GetComponent<Canvas>().enabled = false;
+                            JointInfo.UAVComponentType comptype = JointInfo.UAVComponentType.Structure;
+                            string logInfo = "HotKeyComponentToStructure";
 
-                            // change joint component to empty
-                            changeJointToComponent(selected, JointInfo.UAVComponentType.None);
-                            playClick();
-                            Capture.Log("RemovedComponent;" + generatestring() + ";" + getJointPositionStr(selected), Capture.DESIGNER);
-
-                            if (tutorialStep == 4)
-                                toggleTutorial();
-
-                        }
-
-                        // delete connector 
-                        if (selected.name.StartsWith(CONNECTION))
-                        {
-                            // hide the results panel
-                            GameObject.Find(POPUPRESULTSPANEL).GetComponent<Canvas>().enabled = false;
-
-                            ConnectorInfo connectorInfo = connectionGraph[selected];
-                            bool endConnection = true;
-                            foreach (GameObject key in connectionGraph.Keys)
-                                if (connectionGraph[key].x1 == connectorInfo.x2)                             
-                                    endConnection = false;
-
-                            // identify joint component to delete
-                            GameObject connectedjoint = null;
-                            foreach (GameObject joint in jointGraph.Keys)
+                            if (key1Down)
                             {
-
-                                // checks to see if the connection
-                                // has an ending component (for a cycle in the assembly, joints
-                                // are not always added at the end since there is one there already
-                                if (connectionGraph[selected].x2 == jointGraph[joint].index
-                                    && connectionGraph[selected].addedComponent)
-                                    connectedjoint = joint;
+                                comptype = JointInfo.UAVComponentType.Structure;
+                                logInfo = "HotKeyComponentToStructure";
+                            }
+                            else if (key2Down)
+                            {
+                                comptype = JointInfo.UAVComponentType.MotorCW;
+                                logInfo = "HotKeyComponentToMotorCW";
+                            }
+                            else if (key3Down)
+                            {
+                                comptype = JointInfo.UAVComponentType.MotorCCW;
+                                logInfo = "HotKeyComponentToMotorCCW";
+                            }
+                            else if (key4Down)
+                            {
+                                comptype = JointInfo.UAVComponentType.Foil;
+                                logInfo = "HotKeyComponentToFoil";
+                            }
+                            else if (key5Down)
+                            {
+                                comptype = JointInfo.UAVComponentType.None;
+                                logInfo = "HotKeyComponentToEmpty";
                             }
 
-                            // if there is not ending component (a cycle in the assembly)
-                            // or if it is an ending connection
-                            if (connectedjoint == null || endConnection)
+                            changeJointToComponent(selected, comptype);
+
+                            playClick();
+
+                            string s = generatestring();
+                            Capture.Log(logInfo + ";" + comptype.ToString() + ";" + s + ";" + getJointPositionStr(selected), Capture.DESIGNER);
+                            updateHistory(s);
+
+                        }
+                    }
+                }
+
+                // delete operation
+                if (Input.GetKeyDown("d"))
+                {
+
+                    RaycastHit hitInfo = new RaycastHit();
+                    if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo, 100.0f))
+                    {
+
+                        GameObject selected = hitInfo.transform.gameObject;
+                        if (selected)
+                        {
+
+                            // if mouse is over a joint
+                            if (selected.name.StartsWith(JOINT))
                             {
+                                // hide the results panel
+                                GameObject.Find(POPUPRESULTSPANEL).GetComponent<Canvas>().enabled = false;
 
-                                // if there is a component at the end of the connection,
-                                // remove the component
-                                if (connectedjoint != null)
-                                {
-                                    intersections.Remove(connectedjoint.transform.position);
-                                    if (jointGraph[connectedjoint].gameObj != null)
-                                        Destroy(jointGraph[connectedjoint].gameObj);
-                                    if (jointGraph[connectedjoint].textLabel != null)
-                                        Destroy(jointGraph[connectedjoint].textLabel);
-                                    jointGraph.Remove(connectedjoint);
-                                    Destroy(connectedjoint);
-                                    bottomLogString = "Removed component";
-                                }
-
-                                string position = "";
-                                // reactivate handle associated with this connection and make it visible
-                                GameObject reactivateHandle = null;
-                                foreach (GameObject key in jointHandleToConnection.Keys)
-                                {
-                                    if (selected.Equals(jointHandleToConnection[key]))
-                                    {
-                                        key.SetActive(true);
-                                        reactivateHandle = key;
-                                        try
-                                        {
-                                            position = getJointPositionStr(key.transform.parent.gameObject) + "," + key.name;
-                                        } catch (Exception e)
-                                        {
-                                            Debug.Log(e);
-                                        }
-                                    }
-                                }
-
-                                // remove joint and cleanup dictionaries
-                                Destroy(selected);
-                                connectionGraph.Remove(selected);
-                                intersections.Remove(selected.transform.position);
-                                if (reactivateHandle != null)
-                                    jointHandleToConnection.Remove(reactivateHandle);
-
-                                // when removing joints and connection, reorder components
-                                reorderJoints();
-
-                                string s = generatestring();
-                                Capture.Log("RemovedConnector;" + s + ";" + position, Capture.DESIGNER);
-                                bottomLogString = "Removed connector";
-                                updateHistory(s);
-
+                                // change joint component to empty
+                                changeJointToComponent(selected, JointInfo.UAVComponentType.None);
                                 playClick();
+                                Capture.Log("RemovedComponent;" + generatestring() + ";" + getJointPositionStr(selected), Capture.DESIGNER);
 
-                                if (tutorialStep == 3)
+                                if (tutorialStep == 4)
                                     toggleTutorial();
 
                             }
-                            else
+
+                            // delete connector 
+                            if (selected.name.StartsWith(CONNECTION))
                             {
-                                ShowMsg("Not an ending connection", true);
+                                // hide the results panel
+                                GameObject.Find(POPUPRESULTSPANEL).GetComponent<Canvas>().enabled = false;
+
+                                ConnectorInfo connectorInfo = connectionGraph[selected];
+                                bool endConnection = true;
+                                foreach (GameObject key in connectionGraph.Keys)
+                                    if (connectionGraph[key].x1 == connectorInfo.x2)
+                                        endConnection = false;
+
+                                // identify joint component to delete
+                                GameObject connectedjoint = null;
+                                foreach (GameObject joint in jointGraph.Keys)
+                                {
+
+                                    // checks to see if the connection
+                                    // has an ending component (for a cycle in the assembly, joints
+                                    // are not always added at the end since there is one there already
+                                    if (connectionGraph[selected].x2 == jointGraph[joint].index
+                                        && connectionGraph[selected].addedComponent)
+                                        connectedjoint = joint;
+                                }
+
+                                // if there is not ending component (a cycle in the assembly)
+                                // or if it is an ending connection
+                                if (connectedjoint == null || endConnection)
+                                {
+
+                                    // if there is a component at the end of the connection,
+                                    // remove the component
+                                    if (connectedjoint != null)
+                                    {
+                                        intersections.Remove(connectedjoint.transform.position);
+                                        if (jointGraph[connectedjoint].gameObj != null)
+                                            Destroy(jointGraph[connectedjoint].gameObj);
+                                        if (jointGraph[connectedjoint].textLabel != null)
+                                            Destroy(jointGraph[connectedjoint].textLabel);
+                                        jointGraph.Remove(connectedjoint);
+                                        Destroy(connectedjoint);
+                                        bottomLogString = "Removed component";
+                                    }
+
+                                    string position = "";
+                                    // reactivate handle associated with this connection and make it visible
+                                    GameObject reactivateHandle = null;
+                                    foreach (GameObject key in jointHandleToConnection.Keys)
+                                    {
+                                        if (selected.Equals(jointHandleToConnection[key]))
+                                        {
+                                            key.SetActive(true);
+                                            reactivateHandle = key;
+                                            try
+                                            {
+                                                position = getJointPositionStr(key.transform.parent.gameObject) + "," + key.name;
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                Debug.Log(e);
+                                            }
+                                        }
+                                    }
+
+                                    // remove joint and cleanup dictionaries
+                                    Destroy(selected);
+                                    connectionGraph.Remove(selected);
+                                    intersections.Remove(selected.transform.position);
+                                    if (reactivateHandle != null)
+                                        jointHandleToConnection.Remove(reactivateHandle);
+
+                                    // when removing joints and connection, reorder components
+                                    reorderJoints();
+
+                                    string s = generatestring();
+                                    Capture.Log("RemovedConnector;" + s + ";" + position, Capture.DESIGNER);
+                                    bottomLogString = "Removed connector";
+                                    updateHistory(s);
+
+                                    playClick();
+
+                                    if (tutorialStep == 3)
+                                        toggleTutorial();
+
+                                }
+                                else
+                                {
+                                    ShowMsg("Not an ending connection", true);
+                                }
+
                             }
 
                         }
 
                     }
-
                 }
-            }
 
-            // show evaluation animation
-            if (showingEvaluationMode)
-                moveEvalautionVehicle();
+                // show evaluation animation
+                if (showingEvaluationMode)
+                    moveEvalautionVehicle();
 
-            // rotate motor blades
-            if (rotateMotors || evaluating)
-            {
-                // graphically spin all rotors
-                GameObject[] objscw = GameObject.FindGameObjectsWithTag(SPINNERCW);
-                GameObject[] objsccw = GameObject.FindGameObjectsWithTag(SPINNERCCW);
-                foreach (GameObject obj in objscw)
+                // rotate motor blades
+                if (rotateMotors || evaluating)
                 {
-                    obj.transform.Rotate(new Vector3(0, 1, 0), 6);
-                }
-                foreach (GameObject obj in objsccw)
-                {
-                    obj.transform.Rotate(new Vector3(0, 1, 0), -6);
+                    // graphically spin all rotors
+                    GameObject[] objscw = GameObject.FindGameObjectsWithTag(SPINNERCW);
+                    GameObject[] objsccw = GameObject.FindGameObjectsWithTag(SPINNERCCW);
+                    foreach (GameObject obj in objscw)
+                    {
+                        obj.transform.Rotate(new Vector3(0, 1, 0), 6);
+                    }
+                    foreach (GameObject obj in objsccw)
+                    {
+                        obj.transform.Rotate(new Vector3(0, 1, 0), -6);
+                    }
                 }
             }
 
@@ -1501,16 +1488,6 @@ namespace DesignerAssets
         {
 
             string[] typeAction = new string[] { NOEVENT, "" };
-
-            // check for left click on joint handle - took out for -12345
-            //if (selected.name.StartsWith(JOINT))
-            //{
-            //    JointInfo.UAVComponentType componentType = JointInfo.getNextComponentType(jointGraph[selected].componentType);
-            //    typeAction[0] = "ToggleComponent";
-            //    typeAction = changeJointToComponent(selected, componentType);
-            //}
-            // check for left click on assembly handle
-            //else 
             if (selected.name.Equals(POSITIVEZ) ||
                 selected.name.Equals(NEGATIVEZ) ||
                 selected.name.Equals(POSITIVEX) ||
@@ -1866,75 +1843,6 @@ namespace DesignerAssets
                 setShock = false;
             }
 
-            // still some issues we need to resolve before switching to a server base evaluation
-            //// return evaluation result from the server
-            //if(RestWebService.uavEvaluation != null)
-            //{
-            //    try
-            //    {
-            //        // if not an ai run (or a regular evaluation, show the resulting resuls and trajectory
-            //        if (!aiRun)
-            //        {
-
-            //            showingEvaluationMode = true;
-
-            //            // create a clone to the vehicle to display vehicle path
-            //            createEvaluationVehicle();
-
-            //            // store the evaluation as the last output
-            //            lastOutput = RestWebService.uavEvaluation;
-
-            //            // store last position of trajectory to draw segment
-            //            Vector3 lastPosition = new Vector3(0, 0, 0);
-            //            foreach (RestWebService.Trajectory trajactory in RestWebService.uavEvaluation.trajectory)
-            //            {
-            //                Vector3 nextPosition = new Vector3((float)trajactory.position[0],
-            //                    (float)trajactory.position[1],
-            //                    (float)trajactory.position[2]);
-            //                CreateCylinderBetweenPoints(lastPosition, nextPosition, 0.8f, Color.white);
-            //                lastPosition = nextPosition;
-            //            }
-
-            //            // show teststand and set view to show trajectory
-            //            ShowTestStand(true);
-            //            ResetViewToEvaluationView();
-
-            //            // show result message 
-            //            String resultMessage = lastOutput.result;
-            //            if (resultMessage.Contains("Success"))
-            //            {
-            //                successfulRun = true;
-            //                int capacity = getCapacity(lastOutput.config);
-            //                resultMessage = GetResults(lastOutput.result, "\n", lastOutput.range, capacity, 
-            //                    UAVDesigner.getShockCost(lastOutput.cost), lastOutput.velocity, null);
-            //                bottomLogString = GetResults("Last Run", " : ", lastOutput.range, capacity, UAVDesigner.getShockCost(lastOutput.cost), lastOutput.velocity, null); ;
-            //                ShowSuccessMsg(resultMessage);
-            //            } else
-            //            {
-            //                ShowErrorMsg(resultMessage);
-            //            }
-
-            //        } else
-            //        {
-            //            // get the resulting evaluation
-            //            RestWebService.EvaluationOutput output = RestWebService.uavEvaluation;
-            //            string s = generatestring();
-            //            float capacity = float.Parse(s.Split(',')[1]);
-
-            //            // call the designer AI to find designs based on the current evaluation metrics
-            //            aihelper.callWebServiceForAIDesigns((float)output.range, (float)output.cost, capacity, s);
-            //        }
-
-            //    }
-            //    catch (Exception e)
-            //    {
-            //        Debug.Log(e);
-            //    }
-            //    finally
-            //    {
-            //        RestWebService.uavEvaluation = null;
-            //    }
-            //}
 
             // check for AI queue results, only check when in design mode
             if(!evaluating && !aiMode && !showingEvaluationMode)
@@ -2634,24 +2542,6 @@ namespace DesignerAssets
             }
         }
 
-        /// <summary>
-        /// runs the evaluation using the central server, still working on some issues 
-        /// with this approach, specifically currently working on bugs with orientation 
-        /// of vehicles in the trajectory data and allowing for multiple runs simulaneously
-        /// </summary>
-        //private void runServerEvaluation()
-        //{
-        //    Vehicle vehicle = new Vehicle();
-        //    vehicle.config = generatestring();
-
-        //    // set information strings
-        //    ShowSuccessMsg("Evaluating ...");
-
-        //    // send evaluation to server and log
-        //    evaluating = true;
-        //    DataInterface.EvaluateVehicle(vehicle);
-
-        //}
 
         /// <summary>
         /// runs the vehicle evaluation within the scene
