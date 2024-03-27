@@ -28,11 +28,6 @@ public class MoveCamera : MonoBehaviour
     private Vector3 mouseOrigin;   
     
     /// <summary>
-    /// flag to identify panning
-    /// </summary>
-    private bool isPanning;
-
-    /// <summary>
     /// flag to identify rotating
     /// </summary>
     private bool isRotating;
@@ -65,21 +60,12 @@ public class MoveCamera : MonoBehaviour
         // check for orth view
         bool orthView = BaseDeliveryInterface.orthogonalView;
 
-        // zoom
-        //if (Input.GetKey(KeyCode.LeftShift) && Input.GetMouseButtonDown(0)){
-        //    mouseOrigin = Input.mousePosition;
-        //    isZooming = true;
-        //} else
         if (Input.GetMouseButtonDown(0)) // rotate
         {
             mouseOrigin = Input.mousePosition;
             if(mouseOrigin.x < (Screen.width - Screen.width / 8.0) 
                 && mouseOrigin.x > 240) // restrict to center of screen
                 isRotating = true;   
-        //} else if (Input.GetMouseButtonDown(1)) // pan
-        //{
-         //   mouseOrigin = Input.mousePosition;
-         //   isPanning = true;
         } else if (Input.mouseScrollDelta.y != 0) // zoom
         {
             mouseOrigin = Input.mousePosition;
@@ -88,8 +74,6 @@ public class MoveCamera : MonoBehaviour
 
         // disable movements on button release
         if (!Input.GetMouseButton(0)) isRotating = false;
-        //if (!Input.GetMouseButton(1)) isPanning = false;
-        //if (!Input.GetMouseButton(1)) isZooming = false; // && (!Input.GetMouseButton(0) && !Input.GetKey(KeyCode.LeftShift))) isZooming = false;
         if (Input.mouseScrollDelta.y == 0) isZooming = false;
         // restrict y rotation level
 
@@ -123,23 +107,14 @@ public class MoveCamera : MonoBehaviour
             if (Mathf.Abs(pos.x * turnSpeed) < maxSpeedX)
             {
                 transform.RotateAround(center, Vector3.up, pos.x * turnSpeed);
-                //Debug.Log(pos.x * turnSpeed + " " + maxSpeedX);
             }
             else
             {
-                //Debug.Log("HIT MAX");
                 transform.RotateAround(center, Vector3.up, pos.x * maxSpeedX);
             }
 
         }
 
-        // move the camera on it's XY plane
-        if (isPanning && !orthView)
-        {
-            Vector3 pos = -Camera.main.ScreenToViewportPoint(Input.mousePosition - mouseOrigin);
-            Vector3 move = new Vector3(pos.x * panSpeed, pos.y * panSpeed, 0);
-            transform.Translate(move, Space.Self);
-        }
 
         // zoom camera in and out
         if (isZooming && !orthView)
@@ -158,20 +133,11 @@ public class MoveCamera : MonoBehaviour
             }
         }
 
-        // move the camera on it's XY plane
-        if (isPanning && orthView)
-        {
-            Vector3 pos = Camera.main.ScreenToViewportPoint(Input.mousePosition - mouseOrigin);
-            Vector3 p = Camera.main.transform.position;
-            Camera.main.transform.position = new Vector3(p.x - pos.x, p.y, p.z - pos.y);
-        }
 
         // move the camera linearly along Z axis
         if (isZooming && orthView)
         {
-            //Vector3 pos = Camera.main.ScreenToViewportPoint(Input.mouseScrollDelta.y * 0.1f);  //Input.mousePosition - mouseOrigin);
-            //Debug.Log(Input.mouseScrollDelta.y);
-            BaseDeliveryInterface.orthoZoom -= Input.mouseScrollDelta.y * 0.1f;//pos.y;
+            BaseDeliveryInterface.orthoZoom -= Input.mouseScrollDelta.y * 0.1f;
             Camera.main.orthographicSize = BaseDeliveryInterface.orthoZoom;
         }
 

@@ -23,9 +23,6 @@ namespace DataObjects
     /// </summary>
     public class Vehicle
     {
-
-        private static int counter = 0;
-
         public Vehicle(){}
 
         /// <summary>

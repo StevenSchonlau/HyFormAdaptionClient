@@ -14,39 +14,6 @@ public class StartupMono : MonoBehaviour
         AttachScripts();
         return;
 
-#if UNITY_WEBGL && !UNITY_EDITOR
-        Startup.csrfToken = SessionLib.GetCSRFToken();
-        Startup.userid = SessionLib.GetUserName();
-        String isAiStr = SessionLib.GetIsAI();
-        String isTutorialStr = SessionLib.GetIsTutorial();
-        if(isAiStr.Equals("True"))
-        {
-            Startup.isAI = true;
-        } else
-        {
-            Startup.isAI = false;
-        }   
-        
-        if(isTutorialStr.Equals("True"))
-        {
-            Startup.tutorial = true;
-        } else
-        {
-            Startup.tutorial = false;
-        }
-
-        string[] useridParts = Startup.userid.Split('_');
-        if (useridParts.Length > 0)
-        {
-            Startup.teamname = useridParts[0];
-        }
-
-        Debug.Log("Username = " + Startup.userid + " , Teamname = " + Startup.teamname);
-        AttachScripts();
-#endif
-#if UNITY_EDITOR || UNITY_STANDALONE
-        StartCoroutine(GetAuthToken());
-#endif
     }
 
     // Update is called once per frame

@@ -26,15 +26,16 @@ public class Capture {
     /// <param name="type">message type</param>
     public static void Log(string str, string type)
     {
-        
-        if (Startup.logToServer)
+        Debug.Log(str);
+        System.IO.File.AppendAllText(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop) + "unitylogging.txt", (System.DateTime.Now).ToString() + ";" + str + "\r\n");
+        /*if (Startup.logToServer)
         {
             GameObject.Find("restapi").GetComponent<DataObjects.RestWebService>().PostLog(str, type);            
         }
         else
         {
             System.IO.File.AppendAllText("./" + type + ".log", (System.DateTime.Now).ToString() + ";" + str + "\r\n");
-        }
+        }*/
     }
 
 }

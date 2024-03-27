@@ -311,6 +311,14 @@ namespace DesignerAssets
         private int seconds;
         private bool paused = false;
         private Action resumeFuncPointer = null;
+        private bool starting = true;
+        private Action startFuncPointer = null;
+        private Action endEarlyFunc = null;
+        private bool endGame = false;
+        private int theRound = 0;
+        private int conditionsMet = 0; 
+
+        List<string> dataList = new List<string>() { "Drone Designer" };
 
         /// <summary>
         /// 
@@ -373,13 +381,14 @@ namespace DesignerAssets
         /// initializes the scene
         /// 
         /// </summary>
-        public void Initialize(string designString, bool restartHist, int[] criteria)
+        public void Initialize(string designString, bool restartHist, int[] criteria, int round)
         {
             this.last10Seconds = false;
             this.theRange = criteria[0];
             this.theCapacity = criteria[1];
             this.theCost = criteria[2];
             this.theSpeed = criteria[3];
+            this.theRound = round;
             capacityStr = theCapacity.ToString();
             ShowTestStandEvaluation(false);
             // sets the joint index counter to 0
@@ -406,6 +415,10 @@ namespace DesignerAssets
                 //reset history
                 history = new List<string>();
                 historyIndex = 0;
+                theCurCost = -1;
+                theCurRange = -1;
+                theCurSpeed = -1;
+                conditionsMet = 0;
             }
 
             // set the initial base joint
@@ -478,7 +491,11 @@ namespace DesignerAssets
                 !showingEvaluationMode && 
                 !aiMode && 
                 !GUIAssets.PopupButton.showing && !GameObject.Find(OPENDESIGNPOPUPCONFIRM).GetComponent<Canvas>().enabled;
-            if (paused)
+            if (endGame)
+                onGUIEndMode();
+            else if (starting)
+                onGUITitleMode();
+            else if (paused)
                 onGUIPauseMode();
             else if (designMode)
                 onGUIDesignMode();
@@ -518,12 +535,13 @@ namespace DesignerAssets
                 
             }
 
-
-            GUI.Box(new Rect(Screen.width - 120, 55, 100, 30), "");
-            GUI.color = Color.red;
-            GUI.Label(new Rect(Screen.width - 110, 60, 110, 20), "Time Left:  " + seconds.ToString());
-            GUI.color = Color.white;
-
+            if (!starting && !endGame)
+            {
+                GUI.Box(new Rect(Screen.width - 120, 55, 100, 30), "");
+                GUI.color = Color.red;
+                GUI.Label(new Rect(Screen.width - 110, 60, 110, 20), "Time Left:  " + seconds.ToString());
+                GUI.color = Color.white;
+            }
             // flip text labels if needed
             foreach (GameObject obj in jointGraph.Keys)
             {
@@ -576,8 +594,82 @@ namespace DesignerAssets
             GUI.Label(new Rect(Screen.width/2-70, 190, 140, 25), "Cost ($): " + theCost.ToString(), fontChange);
             GUI.Label(new Rect(Screen.width/2-70, 240, 140, 25), "Range (mi): " + theRange.ToString(), fontChange);
         }
+
+        public void awakeFunc(Action startFuncPointer, Action endEarly)
+        {
+            this.startFuncPointer = startFuncPointer;
+            this.endEarlyFunc = endEarly;
+
+        }
+
+        void startFunc()
+        {
+            starting = false;
+            startFuncPointer();
+        }
+
+        void onGUITitleMode()
+        {
+
+            Rect rect = Camera.main.pixelRect;
+            GUI.contentColor = Color.white;
+
+            GUI.Box(new Rect(0, 0, Screen.width, Screen.height), "");
+            if (GUI.Button(new Rect(Screen.width / 2 - 50, Screen.height / 2 + 40, 100, 50), new GUIContent("Start!", "Proceed to the next round")))
+            {
+                startFunc();
+            }
+        }
+
+        //used for download
+        static string scriptTemplate = @"
+            var link = document.createElement(""a"");
+            link.download = '{0}';
+            link.href = 'data:application/octet-stream;charset=utf-8;base64,{1}';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            delete link;
+        ";
+
+        //this creates a downloadable file for WebGL for the log
+        public static void InitiateDownload(string aName, byte[] aData)
+        {
+            string base64 = System.Convert.ToBase64String(aData);
+            string script = string.Format(scriptTemplate, aName, base64);
+            Application.ExternalEval(script);
+        }
+
+        //This converts the list of log messages to a newline separated string, and calls download
+        public static void downloadBtn(string aName, List<string> aData)
+        {
+            var joinedData = String.Join("\n", aData.ToArray());
+            byte[] data = System.Text.Encoding.UTF8.GetBytes(joinedData);
+            InitiateDownload(aName, data);
+        }
+
+        //at end of all rounds
+        void onGUIEndMode()
+        {
+
+            Rect rect = Camera.main.pixelRect;
+            GUI.contentColor = Color.white;
+
+            GUI.Box(new Rect(0, 0, Screen.width, Screen.height), "");
+            if (GUI.Button(new Rect(Screen.width / 2 - 50, Screen.height / 2 + 40, 100, 50), new GUIContent("Download", "Download Data")))
+            {
+                //calls download
+                downloadBtn("unitylog.txt", dataList);
+            }
+        }
+
         
-        
+
+        public void end()
+        {
+            endGame = true;
+        }
+
         public void Warning10Seconds()
         {
             last10Seconds = true;
@@ -600,6 +692,7 @@ namespace DesignerAssets
             paused = false;
             resumeFuncPointer();
             ResetDesignModeView();
+            dataList.Add("Round " + theRound.ToString());
         }
 
         public void UpdateSecond(int theSecond)
@@ -620,8 +713,6 @@ namespace DesignerAssets
 
             // get sizing variables
             Rect rect = Camera.main.pixelRect;
-            int xbuffer = 5;
-            int ybuffer = 5;
 
             // hide AI panels
             GameObject.Find(DESIGNTOOLBOXPANEL).GetComponent<Canvas>().enabled = true;
@@ -631,35 +722,74 @@ namespace DesignerAssets
             GUI.Box(new Rect(10, 50, 200, 125), "");
 
             // capacity label and input
+            
             GUI.color = Color.white;
             GUI.Label(new Rect(20, 60, 240, 25), "Capacity (lb): " + theCapacity.ToString());
+            //conditionsMet - bit manipulation
+            // 001 = speed
+            // 010 = cost
+            // 100 = range
             if (theSpeed > theCurSpeed)
             {
                 GUI.color = Color.red;
+                if ((conditionsMet & 1) == 1) //ie bit one set
+                {
+                    conditionsMet -= 1;
+                    dataList.Add(Time.time + ";Speed Lost");
+                }
             }
             else
             {
                 GUI.color = Color.green;
+                if ((conditionsMet & 1) == 0) //ie bit one not set
+                {
+                    conditionsMet += 1;
+                    dataList.Add(Time.time + ";Speed Met");
+                }
             }
             GUI.Label(new Rect(20, 80, 240, 25), "Speed (m/s): " + theSpeed.ToString() + "   Current: " + theCurSpeed.ToString());
-            if (theCost > theCurCost)
+            if (theCost < theCurCost || theCurCost == -1)
             {
                 GUI.color = Color.red;
+                if ((conditionsMet & 2) == 1) //ie bit one not set
+                {
+                    conditionsMet -= 2;
+                    dataList.Add(Time.time + ";Cost Lost");
+                }
             }
             else
             {
                 GUI.color = Color.green;
+                if ((conditionsMet & 2) == 0) //ie bit one not set
+                {
+                    conditionsMet += 2;
+                    dataList.Add(Time.time + ";Cost Met");
+                }
             }
             GUI.Label(new Rect(20, 100, 240, 25), "Cost ($): " + theCost.ToString() + "   Current: " + theCurCost.ToString());
             if (theRange > theCurRange)
             {
                 GUI.color = Color.red;
+                if ((conditionsMet & 4) == 1) //ie bit one not set
+                {
+                    conditionsMet -= 4;
+                    dataList.Add(Time.time + ";Range Lost");
+                }
             } else
             {
                 GUI.color = Color.green;
+                if ((conditionsMet & 4) == 0) //ie bit one not set
+                {
+                    conditionsMet += 4;
+                    dataList.Add(Time.time + ";Range Met");
+                }
             }
             GUI.Label(new Rect(20, 120, 240, 25), "Range (mi): " + theRange.ToString() + "   Current: " + theCurRange.ToString());
             GUI.color = Color.white;
+            if (conditionsMet == 7) //ie 111
+            {
+                endEarlyFunc();
+            }
             
             if (GUI.Button(evalRect, new GUIContent("Evaluate", "Evaluate the Design Performance in a Test Environment")))
             {
@@ -680,6 +810,7 @@ namespace DesignerAssets
                 // runServerEvaluation();
                 runLocalEvaluation();
                 Capture.Log("Evaluate;" + generatestring(), Capture.DESIGNER);
+                dataList.Add(Time.time + ";Evaluate;" + generatestring());
                 ShowMsg("Evaluating ...", false);
                 playClick();
             }
@@ -693,6 +824,7 @@ namespace DesignerAssets
                     historyIndex -= 1;
                     fromstring(history[historyIndex]);
                     Capture.Log("Undo:" + history[historyIndex], Capture.DESIGNER);
+                    dataList.Add(Time.time + ";Undo:" + history[historyIndex]);
                     playClick();
                 }
             }
@@ -708,6 +840,7 @@ namespace DesignerAssets
                         historyIndex += 1;
                         fromstring(history[historyIndex]);
                         Capture.Log("Redo:" + history[historyIndex], Capture.DESIGNER);
+                        dataList.Add(Time.time + ";Redo:" + history[historyIndex]);
                         playClick();
                     }
                 }
@@ -731,6 +864,7 @@ namespace DesignerAssets
             {
                 ResetView();
                 Capture.Log("ResetView;" + generatestring(), Capture.DESIGNER);
+                dataList.Add(Time.time + ";ResetView" + generatestring());
                 playClick();
             }
 
@@ -986,6 +1120,7 @@ namespace DesignerAssets
                             updateHistory(s);
                             playClick();
                             Capture.Log("MouseClick;" + result[0] + ";" + s + ";" + result[1], Capture.DESIGNER);
+                            dataList.Add(Time.time + ";MouseClick;" + result[0] + ";" + s + ";" + result[1]);
 
                             Debug.Log(result[0]);
                             if (tutorialStep == 1 && result[0].Contains("Toggle"))
@@ -1020,7 +1155,7 @@ namespace DesignerAssets
                         updateHistory(s);
                         playClick();
                         Capture.Log((Input.GetMouseButtonDown(1) ? "ScaleUp;" : "HotKeyScaleUp;") + s + ";" + getJointPositionStr(selected), Capture.DESIGNER);
-
+                        dataList.Add(Time.time + ";" + (Input.GetKeyDown(KeyCode.DownArrow) ? "HotKeyScaleDown;" : "ScaleDown;") + s + ";" + getJointPositionStr(selected));
                         if (tutorialStep == 5)
                             toggleTutorial();
 
@@ -1042,7 +1177,7 @@ namespace DesignerAssets
                         updateHistory(s);
                         playClick();
                         Capture.Log((Input.GetKeyDown(KeyCode.DownArrow) ? "HotKeyScaleDown;" : "ScaleDown;") + s + ";" + getJointPositionStr(selected), Capture.DESIGNER);
-
+                        dataList.Add(Time.time + ";" + (Input.GetKeyDown(KeyCode.DownArrow) ? "HotKeyScaleDown;" : "ScaleDown;") + s + ";" + getJointPositionStr(selected));
                         if (tutorialStep == 6)
                             toggleTutorial();
 
@@ -1100,6 +1235,7 @@ namespace DesignerAssets
 
                             string s = generatestring();
                             Capture.Log(logInfo + ";" + comptype.ToString() + ";" + s + ";" + getJointPositionStr(selected), Capture.DESIGNER);
+                            dataList.Add(Time.time + ";" + logInfo + ";" + comptype.ToString() + ";" + s + ";" + getJointPositionStr(selected));
                             updateHistory(s);
 
                         }
@@ -1128,6 +1264,7 @@ namespace DesignerAssets
                                 changeJointToComponent(selected, JointInfo.UAVComponentType.None);
                                 playClick();
                                 Capture.Log("RemovedComponent;" + generatestring() + ";" + getJointPositionStr(selected), Capture.DESIGNER);
+                                dataList.Add(Time.time + ";" + "RemovedComponent;" + generatestring() + ";" + getJointPositionStr(selected));
 
                                 if (tutorialStep == 4)
                                     toggleTutorial();
@@ -1210,6 +1347,7 @@ namespace DesignerAssets
 
                                     string s = generatestring();
                                     Capture.Log("RemovedConnector;" + s + ";" + position, Capture.DESIGNER);
+                                    dataList.Add(Time.time + ";RemovedComponent;" + generatestring() + ";" + getJointPositionStr(selected));
                                     bottomLogString = "Removed connector";
                                     updateHistory(s);
 
@@ -1731,6 +1869,10 @@ namespace DesignerAssets
             showingEvaluationMode = false;
             evaluating = false;
 
+            GameObject.Find(POPUPRESULTSSUCCESSBUTTON).GetComponent<Image>().enabled = false;
+            GameObject.Find(POPUPRESULTSPANEL).GetComponent<Canvas>().enabled = false;
+            GameObject.Find(POPUPRESULTSERRORTEXT).GetComponent<TextMeshProUGUI>().text = "";
+
             // remove any evalaution objects
             RemoveEvaluationObjects();
 
@@ -1973,6 +2115,7 @@ namespace DesignerAssets
                 // reset the base design
                 fromstring(BASEVEHICLECONFIG);
                 Capture.Log("ResetDesign", Capture.DESIGNER);
+                dataList.Add(Time.time + ";ResetDesign");
 
                 updateHistory(BASEVEHICLECONFIG);
 
@@ -2174,6 +2317,7 @@ namespace DesignerAssets
                 ShowMsg(e.Message, true);
                 fromstring(history[historyIndex]);
                 Capture.Log(e.Message, Capture.DESIGNER);
+                dataList.Add(Time.time + ";" + e.Message);
                 return history[historyIndex];
             }
 
@@ -2279,7 +2423,7 @@ namespace DesignerAssets
 
                 // reset to the base joint
                 int[] criteria = new int[4] { theRange, theCapacity, theCost, theSpeed };
-                Initialize("-", false, criteria);
+                Initialize("-", false, criteria, theRound);
 
                 // add all connections
                 for (int i = 0; i < maxConnectionStepIndex + 1; i++)
@@ -2631,6 +2775,9 @@ namespace DesignerAssets
                     Capture.Log("Evaluated;" + config + ";range=" + lastOutput.range.ToString("0.00") + ";capacity=" 
                         + getCapacity(config) + ";cost=" + lastOutput.cost.ToString("0") + ";velocity=" 
                         + lastOutput.velocity.ToString("0.00"), Capture.DESIGNER);
+                    dataList.Add(Time.time + ";Evaluated;" + config + ";range=" + lastOutput.range.ToString("0.00") + ";capacity="
+                        + getCapacity(config) + ";cost=" + lastOutput.cost.ToString("0") + ";velocity="
+                        + lastOutput.velocity.ToString("0.00"));
 
                     // if a regular evaluation run
                     if (!aiRun)
@@ -2666,7 +2813,7 @@ namespace DesignerAssets
                             int capacity = getCapacity(lastOutput.config);
                             resultMessage = GetResults(lastOutput.result, "\n", lastOutput.range, capacity,
                                 UAVDesigner.getShockCost(lastOutput.cost), lastOutput.velocity, null);
-                            bottomLogString = GetResults("Last Run", " : ", lastOutput.range, capacity, UAVDesigner.getShockCost(lastOutput.cost), lastOutput.velocity, null); ;
+                            //bottomLogString = GetResults("Last Run", " : ", lastOutput.range, capacity, UAVDesigner.getShockCost(lastOutput.cost), lastOutput.velocity, null); ;
                             ShowMsg("Showing Trajectory : " + resultMessage, false);
 
                             if (validConfigCheck.Equals(config))
@@ -2679,6 +2826,9 @@ namespace DesignerAssets
                         {
                             resultMessage = physics.resultMsg;
                             ShowMsg("Showing Trajectory ...", true);
+                            theCurCost = -1;
+                            theCurRange = -1;
+                            theCurSpeed = -1;
                         }
                     }
                     else   // AI run
