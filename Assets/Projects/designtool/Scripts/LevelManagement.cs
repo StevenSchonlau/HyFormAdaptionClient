@@ -79,9 +79,9 @@ public class LevelManagement : MonoBehaviour
             TimeSpan ts = DateTime.Now.Subtract(sdt);
             if (state != -1)
             {
-                uavd.UpdateSecond(timeLimit - (ts.Seconds + 60 * ts.Minutes));
+                uavd.UpdateSecond((ts.Seconds + 60 * ts.Minutes));
             }
-            if (DateTime.Compare(DateTime.Now, dt) > 0 || overriden)
+            if (overriden)
             {
                 if (state == 0)
                 {
