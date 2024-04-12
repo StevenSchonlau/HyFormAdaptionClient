@@ -879,7 +879,7 @@ namespace DesignerAssets
 
             // if the session allows for AI and there is a valid capacity value entered,
             // show the AI button
-            if (Startup.isAI)
+            /*if (Startup.isAI)
             {
                 if (GUI.Button(aiRect, new GUIContent(aiimage, "AI Agent to Generate Design Alternatives")))
                 {
@@ -906,7 +906,7 @@ namespace DesignerAssets
                     playClick();
 
                 }
-            }
+            } */
 
             // if the session allows for AI and there is a valid capacity value entered,
             // show the AI button
@@ -1312,7 +1312,7 @@ namespace DesignerAssets
                                             Destroy(jointGraph[connectedjoint].textLabel);
                                         jointGraph.Remove(connectedjoint);
                                         Destroy(connectedjoint);
-                                        bottomLogString = "Removed component";
+                                        //bottomLogString = "Removed component";
                                     }
 
                                     string position = "";
@@ -1348,7 +1348,7 @@ namespace DesignerAssets
                                     string s = generatestring();
                                     Capture.Log("RemovedConnector;" + s + ";" + position, Capture.DESIGNER);
                                     dataList.Add(Time.time + ";RemovedComponent;" + generatestring() + ";" + getJointPositionStr(selected));
-                                    bottomLogString = "Removed connector";
+                                    //bottomLogString = "Removed connector";
                                     updateHistory(s);
 
                                     playClick();
@@ -1481,7 +1481,7 @@ namespace DesignerAssets
                 sizeComponent(joint, previousSize);
                 jointGraph[joint].setTextLabel();
 
-                bottomLogString = "Selected structure";
+                //bottomLogString = "Selected structure";
                 typeAction = "ToggleStructure";
 
             }
@@ -1496,7 +1496,7 @@ namespace DesignerAssets
                 sizeComponent(joint, previousSize);
                 jointGraph[joint].setTextLabel();
 
-                bottomLogString = "Selected ccw motor";
+                //bottomLogString = "Selected ccw motor";
                 typeAction = "ToggleCCWMotor";
 
             }
@@ -1511,7 +1511,7 @@ namespace DesignerAssets
                 sizeComponent(joint, previousSize);
                 jointGraph[joint].setTextLabel();
 
-                bottomLogString = "Selected cw motor";
+                //bottomLogString = "Selected cw motor";
                 typeAction = "ToggleCWMotor";
 
             }
@@ -1528,7 +1528,7 @@ namespace DesignerAssets
                 sizeComponent(joint, previousSize);
                 jointGraph[joint].setTextLabel();
 
-                bottomLogString = "Selected foil";
+                //bottomLogString = "Selected foil";
                 typeAction = "ToggleFoil";
 
             }
@@ -1540,7 +1540,7 @@ namespace DesignerAssets
                 jointGraph[joint].sizedata = previousSize;
                 jointGraph[joint].setTextLabel();
 
-                bottomLogString = "No component";
+                //bottomLogString = "No component";
                 typeAction = "ToggleEmpty";
 
             }
@@ -1610,7 +1610,7 @@ namespace DesignerAssets
                 handleInfo += ",negx";
             }
 
-            bottomLogString = "Assembly change";
+            //bottomLogString = "Assembly change";
             return new string[] { "AssemblyChange", handleInfo };
 
         }
@@ -1656,7 +1656,7 @@ namespace DesignerAssets
                 jointGraph[selected].sizedata = jointGraph[selected].sizedata + 1;
                 jointGraph[selected].setTextLabel();
 
-                bottomLogString = "Increase size";
+                //bottomLogString = "Increase size";
             }
 
         }
@@ -1680,7 +1680,7 @@ namespace DesignerAssets
                     jointGraph[selected].sizedata = jointGraph[selected].sizedata - 1;
                     jointGraph[selected].setTextLabel();
 
-                    bottomLogString = "Decrease size";
+                    //bottomLogString = "Decrease size";
                 }
             }
 

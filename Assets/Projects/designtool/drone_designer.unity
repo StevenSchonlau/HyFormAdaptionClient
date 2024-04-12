@@ -946,8 +946,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4278190080
+  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -2021,7 +2021,6 @@ GameObject:
   - component: {fileID: 135322007}
   - component: {fileID: 135322009}
   - component: {fileID: 135322008}
-  - component: {fileID: 135322010}
   m_Layer: 5
   m_Name: iconempty (1)
   m_TagString: Untagged
@@ -2081,19 +2080,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 135322006}
   m_CullTransparentMesh: 0
---- !u!114 &135322010
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 135322006}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3f1cdea60e9eb09498085501534186a4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  componentType: 0
 --- !u!1 &141243652
 GameObject:
   m_ObjectHideFlags: 0
@@ -9903,7 +9889,6 @@ GameObject:
   - component: {fileID: 1230977976}
   - component: {fileID: 1230977978}
   - component: {fileID: 1230977977}
-  - component: {fileID: 1230977979}
   m_Layer: 5
   m_Name: iconstructure (1)
   m_TagString: Untagged
@@ -9963,19 +9948,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1230977975}
   m_CullTransparentMesh: 0
---- !u!114 &1230977979
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1230977975}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3f1cdea60e9eb09498085501534186a4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  componentType: 0
 --- !u!1 &1233502923
 GameObject:
   m_ObjectHideFlags: 0
@@ -10515,7 +10487,6 @@ GameObject:
   - component: {fileID: 1268240720}
   - component: {fileID: 1268240722}
   - component: {fileID: 1268240721}
-  - component: {fileID: 1268240723}
   m_Layer: 5
   m_Name: iconmotorcw (1)
   m_TagString: Untagged
@@ -10575,19 +10546,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1268240719}
   m_CullTransparentMesh: 0
---- !u!114 &1268240723
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1268240719}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3f1cdea60e9eb09498085501534186a4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  componentType: 0
 --- !u!1 &1279795156
 GameObject:
   m_ObjectHideFlags: 0
@@ -11692,7 +11650,6 @@ GameObject:
   - component: {fileID: 1383893949}
   - component: {fileID: 1383893951}
   - component: {fileID: 1383893950}
-  - component: {fileID: 1383893952}
   m_Layer: 5
   m_Name: iconmotorccw (1)
   m_TagString: Untagged
@@ -11752,19 +11709,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1383893948}
   m_CullTransparentMesh: 0
---- !u!114 &1383893952
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1383893948}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3f1cdea60e9eb09498085501534186a4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  componentType: 0
 --- !u!1 &1394063866
 GameObject:
   m_ObjectHideFlags: 0
@@ -11776,7 +11720,6 @@ GameObject:
   - component: {fileID: 1394063867}
   - component: {fileID: 1394063869}
   - component: {fileID: 1394063868}
-  - component: {fileID: 1394063870}
   m_Layer: 5
   m_Name: iconfoil (1)
   m_TagString: Untagged
@@ -11836,19 +11779,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1394063866}
   m_CullTransparentMesh: 0
---- !u!114 &1394063870
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1394063866}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3f1cdea60e9eb09498085501534186a4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  componentType: 0
 --- !u!1 &1438973306
 GameObject:
   m_ObjectHideFlags: 0
