@@ -539,7 +539,7 @@ namespace DesignerAssets
             {
                 GUI.Box(new Rect(Screen.width - 120, 55, 100, 30), "");
                 GUI.color = Color.red;
-                GUI.Label(new Rect(Screen.width - 110, 60, 110, 20), "Time Left:  " + seconds.ToString());
+                GUI.Label(new Rect(Screen.width - 110, 60, 110, 20), "Time:  " + seconds.ToString());
                 GUI.color = Color.white;
             }
             // flip text labels if needed
@@ -869,13 +869,13 @@ namespace DesignerAssets
             }
 
             // this button toggles the information panel
-            if (GUI.Button(infoRect, new GUIContent(infoimage, "Toggle Information Panel")))
-            {
-                showInfoPanel = !showInfoPanel;
-                GameObject.Find(HELPPANEL).GetComponent<Canvas>().enabled = showInfoPanel;
-                Capture.Log("ToggleInfoPanel:" + showInfoPanel, Capture.DESIGNER);
-                playClick();
-            }
+            //if (GUI.Button(infoRect, new GUIContent(infoimage, "Toggle Information Panel")))
+            //{
+            //    showInfoPanel = !showInfoPanel;
+            //    GameObject.Find(HELPPANEL).GetComponent<Canvas>().enabled = showInfoPanel;
+            //    Capture.Log("ToggleInfoPanel:" + showInfoPanel, Capture.DESIGNER);
+            //    playClick();
+            //}
 
             // if the session allows for AI and there is a valid capacity value entered,
             // show the AI button
@@ -1143,7 +1143,7 @@ namespace DesignerAssets
                 }
 
                 // scale up component, either right mouse click or up arrow key
-                if ((Input.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.UpArrow)))
+                if (Input.GetKeyDown(KeyCode.W))//((Input.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.UpArrow)))
                 {
                     RaycastHit hitInfo = new RaycastHit();
                     if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo, 100.0f))
@@ -1164,8 +1164,8 @@ namespace DesignerAssets
                 }
 
                 // scale down component, middle mouse click, down arrow key, or shift left click for mouse pad
-                if (Input.GetMouseButtonDown(2) || Input.GetKeyDown(KeyCode.DownArrow)
-                    || (Input.GetMouseButtonDown(0) && Input.GetKey(KeyCode.LeftShift)))
+                if (Input.GetKeyDown(KeyCode.S))//(Input.GetMouseButtonDown(2) || Input.GetKeyDown(KeyCode.DownArrow)
+                    //|| (Input.GetMouseButtonDown(0) && Input.GetKey(KeyCode.LeftShift)))
                 {
                     RaycastHit hitInfo = new RaycastHit();
                     if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitInfo, 100.0f))
@@ -1824,7 +1824,7 @@ namespace DesignerAssets
 
                 }
             }
-        }
+        } 
 
         /// <summary>
         /// 
