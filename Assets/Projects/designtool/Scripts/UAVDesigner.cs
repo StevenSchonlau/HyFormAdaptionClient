@@ -287,7 +287,7 @@ namespace DesignerAssets
         private Rect resetDesignRect = new Rect(70, 10, 28, 28);
         private Rect undoRect = new Rect(10, 10, 28, 28);
         private Rect redoRect = new Rect(40, 10, 28, 28);
-        private Rect evalRect = new Rect(20, 142, 100, 25);
+        private Rect evalRect = new Rect(20, Screen.height/12 * 5 +30, 100, 25);
         private Rect submitRect = new Rect(340, 180, 100, 25);
         private Rect designModePopopRect = new Rect(224, 180, 100, 25);
         private Rect aiRect = new Rect(128, 140, 28, 28);
@@ -319,6 +319,8 @@ namespace DesignerAssets
         private int conditionsMet = 0; 
 
         List<string> dataList = new List<string>() { "Drone Designer" };
+
+        System.Net.Sockets.TcpClient tcpClient;
 
         /// <summary>
         /// 
@@ -606,6 +608,64 @@ namespace DesignerAssets
         {
             starting = false;
             startFuncPointer();
+            //start of level: fNIRS start
+            this.tcpClient = new System.Net.Sockets.TcpClient();
+            System.Net.IPAddress ipAddress = System.Net.IPAddress.Parse("127.0.0.1");
+            System.Net.IPEndPoint ipEndPoint = new System.Net.IPEndPoint(ipAddress, 60000);
+
+            this.tcpClient.Connect(ipEndPoint);
+
+            string message = "abc";
+            int message1 = 1111;
+            string message2 = "xyz";
+
+            // Translate the passed message into ASCII and store it as a Byte array.
+            Byte[] d1 = System.Text.Encoding.ASCII.GetBytes(message);
+            Byte[] d2 = BitConverter.GetBytes(message1);
+            Byte[] d3 = System.Text.Encoding.ASCII.GetBytes(message2);
+            Byte[] data = new Byte[d1.Length + d2.Length + d3.Length];
+            System.Buffer.BlockCopy(d1, 0, data, 0, d1.Length);
+            System.Buffer.BlockCopy(d2, 0, data, d1.Length, d2.Length);
+            System.Buffer.BlockCopy(d3, 0, data, d1.Length+d2.Length, d3.Length);
+
+            // Get a client stream for reading and writing. 
+            Debug.Log(BitConverter.ToString(data));
+            System.Net.Sockets.NetworkStream stream = this.tcpClient.GetStream();
+
+            // Send the message to the connected TcpServer. 
+            stream.Write(data, 0, data.Length);
+            //close here or close at end of round
+            //stream.Dispose();
+            //this.tcpClient.Dispose();
+        }
+
+        void endFunc ()
+        {
+            Debug.Log("End of Round, end fNIRS");
+            //tcpClient should already be connected
+            string message = "abc";
+            int message1 = 1111;
+            string message2 = "xyz";
+
+            // Translate the passed message into ASCII and store it as a Byte array.
+            Byte[] d1 = System.Text.Encoding.ASCII.GetBytes(message);
+            Byte[] d2 = BitConverter.GetBytes(message1);
+            Byte[] d3 = System.Text.Encoding.ASCII.GetBytes(message2);
+            Byte[] data = new Byte[d1.Length + d2.Length + d3.Length];
+            System.Buffer.BlockCopy(d1, 0, data, 0, d1.Length);
+            System.Buffer.BlockCopy(d2, 0, data, d1.Length, d2.Length);
+            System.Buffer.BlockCopy(d3, 0, data, d1.Length + d2.Length, d3.Length);
+
+            // Get a client stream for reading and writing. 
+            Debug.Log(BitConverter.ToString(data));
+            System.Net.Sockets.NetworkStream stream = this.tcpClient.GetStream();
+
+            // Send the message to the connected TcpServer. 
+            stream.Write(data, 0, data.Length);
+            //close here or close at end of round
+            stream.Dispose();
+            this.tcpClient.Dispose();
+            endEarlyFunc();
         }
 
         void onGUITitleMode()
@@ -707,7 +767,7 @@ namespace DesignerAssets
         /// </summary>
         void onGUIDesignMode()
         {
-
+            evalRect = new Rect(20, Screen.height / 12 * 5 + 30, 100, 25);
             // set successful run
             successfulRun = false;
 
@@ -717,14 +777,15 @@ namespace DesignerAssets
             // hide AI panels
             GameObject.Find(DESIGNTOOLBOXPANEL).GetComponent<Canvas>().enabled = true;
             GameObject.Find(AICANVASPANEL).GetComponent<Canvas>().enabled = false;
-
+            int offset = 20;
             // show a box around the capacity and evaluate controls
-            GUI.Box(new Rect(10, 50, 200, 125), "");
+            GUI.Box(new Rect(10, offset + Screen.height/13, Screen.width/3, Screen.height/3), "");
 
             // capacity label and input
-            
-            GUI.color = Color.white;
-            GUI.Label(new Rect(20, 60, 240, 25), "Capacity (lb): " + theCapacity.ToString());
+            GUIStyle fontChange = new GUIStyle();
+            fontChange.fontSize = Screen.height/20;
+            fontChange.normal.textColor = Color.white;
+            GUI.Label(new Rect(20, Screen.height/12 + offset, Screen.width/5, Screen.height/10), "Capacity (lb): " + theCapacity.ToString(), fontChange);
             //conditionsMet - bit manipulation
             // 001 = speed
             // 010 = cost
@@ -747,7 +808,7 @@ namespace DesignerAssets
                     dataList.Add(Time.time + ";Speed Met");
                 }
             }
-            GUI.Label(new Rect(20, 80, 240, 25), "Speed (m/s): " + theSpeed.ToString() + "   Current: " + theCurSpeed.ToString());
+            GUI.Label(new Rect(20, Screen.height*2 / 12 + offset, Screen.width / 5, Screen.height / 12), "Speed (m/s): " + theSpeed.ToString() + "   Current: " + theCurSpeed.ToString(), fontChange);
             if (theCost < theCurCost || theCurCost == -1)
             {
                 GUI.color = Color.red;
@@ -766,7 +827,7 @@ namespace DesignerAssets
                     dataList.Add(Time.time + ";Cost Met");
                 }
             }
-            GUI.Label(new Rect(20, 100, 240, 25), "Cost ($): " + theCost.ToString() + "   Current: " + theCurCost.ToString());
+            GUI.Label(new Rect(20, Screen.height * 3 / 12 + offset, Screen.width / 5, Screen.height / 12), "Cost ($): " + theCost.ToString() + "   Current: " + theCurCost.ToString(), fontChange);
             if (theRange > theCurRange)
             {
                 GUI.color = Color.red;
@@ -784,11 +845,11 @@ namespace DesignerAssets
                     dataList.Add(Time.time + ";Range Met");
                 }
             }
-            GUI.Label(new Rect(20, 120, 240, 25), "Range (mi): " + theRange.ToString() + "   Current: " + theCurRange.ToString());
+            GUI.Label(new Rect(20, Screen.height * 4 / 12 + offset, Screen.width / 5, Screen.height / 12), "Range (mi): " + theRange.ToString() + "   Current: " + theCurRange.ToString(), fontChange);
             GUI.color = Color.white;
             if (conditionsMet == 7) //ie 111
             {
-                endEarlyFunc();
+                endFunc();
             }
             
             if (GUI.Button(evalRect, new GUIContent("Evaluate", "Evaluate the Design Performance in a Test Environment")))
