@@ -321,6 +321,8 @@ namespace DesignerAssets
         List<string> dataList = new List<string>() { "Drone Designer" };
 
         System.Net.Sockets.TcpClient tcpClient;
+        System.Net.Sockets.NetworkStream stream;
+        private bool tcpInit = false;
 
         /// <summary>
         /// 
@@ -608,32 +610,34 @@ namespace DesignerAssets
         {
             starting = false;
             startFuncPointer();
-            //start of level: fNIRS start
-            this.tcpClient = new System.Net.Sockets.TcpClient();
-            System.Net.IPAddress ipAddress = System.Net.IPAddress.Parse("127.0.0.1");
-            System.Net.IPEndPoint ipEndPoint = new System.Net.IPEndPoint(ipAddress, 60000);
+            if (tcpInit == false) { 
+                //start of level: fNIRS start
+                this.tcpClient = new System.Net.Sockets.TcpClient();
+                System.Net.IPAddress ipAddress = System.Net.IPAddress.Parse("127.0.0.1");
+                System.Net.IPEndPoint ipEndPoint = new System.Net.IPEndPoint(ipAddress, 60000);
 
-            this.tcpClient.Connect(ipEndPoint);
-
-            string message = "abc";
-            int message1 = 1111;
-            string message2 = "xyz";
+                this.tcpClient.Connect(ipEndPoint);
+                this.stream = this.tcpClient.GetStream();
+            }
+            //string message = "1";
+            int message1 = 1;
+            //string message2 = "xyz";
 
             // Translate the passed message into ASCII and store it as a Byte array.
-            Byte[] d1 = System.Text.Encoding.ASCII.GetBytes(message);
+            //Byte[] d1 = System.Text.Encoding.ASCII.GetBytes(message);
             Byte[] d2 = BitConverter.GetBytes(message1);
-            Byte[] d3 = System.Text.Encoding.ASCII.GetBytes(message2);
-            Byte[] data = new Byte[d1.Length + d2.Length + d3.Length];
-            System.Buffer.BlockCopy(d1, 0, data, 0, d1.Length);
-            System.Buffer.BlockCopy(d2, 0, data, d1.Length, d2.Length);
-            System.Buffer.BlockCopy(d3, 0, data, d1.Length+d2.Length, d3.Length);
+            //Byte[] d3 = System.Text.Encoding.ASCII.GetBytes(message2);
+            Byte[] data = new Byte[d2.Length];// + d2.Length + d3.Length];
+            System.Buffer.BlockCopy(d2, 0, data, 0, d2.Length);
+            //System.Buffer.BlockCopy(d2, 0, data, d1.Length, d2.Length);
+            //System.Buffer.BlockCopy(d3, 0, data, d1.Length+d2.Length, d3.Length);
 
             // Get a client stream for reading and writing. 
             Debug.Log(BitConverter.ToString(data));
-            System.Net.Sockets.NetworkStream stream = this.tcpClient.GetStream();
+            //System.Net.Sockets.NetworkStream stream = this.tcpClient.GetStream();
 
             // Send the message to the connected TcpServer. 
-            stream.Write(data, 0, data.Length);
+            this.stream.Write(data, 0, data.Length);
             //close here or close at end of round
             //stream.Dispose();
             //this.tcpClient.Dispose();
@@ -642,29 +646,33 @@ namespace DesignerAssets
         void endFunc ()
         {
             Debug.Log("End of Round, end fNIRS");
-            //tcpClient should already be connected
-            string message = "abc";
-            int message1 = 1111;
-            string message2 = "xyz";
+            /*this.tcpClient = new System.Net.Sockets.TcpClient();
+            System.Net.IPAddress ipAddress = System.Net.IPAddress.Parse("127.0.0.1");
+            System.Net.IPEndPoint ipEndPoint = new System.Net.IPEndPoint(ipAddress, 60000);
+
+            this.tcpClient.Connect(ipEndPoint);*/
+
+            //string message = "1";
+            int message1 = 2;
+            //string message2 = "xyz";
 
             // Translate the passed message into ASCII and store it as a Byte array.
-            Byte[] d1 = System.Text.Encoding.ASCII.GetBytes(message);
+            //Byte[] d1 = System.Text.Encoding.ASCII.GetBytes(message);
             Byte[] d2 = BitConverter.GetBytes(message1);
-            Byte[] d3 = System.Text.Encoding.ASCII.GetBytes(message2);
-            Byte[] data = new Byte[d1.Length + d2.Length + d3.Length];
-            System.Buffer.BlockCopy(d1, 0, data, 0, d1.Length);
-            System.Buffer.BlockCopy(d2, 0, data, d1.Length, d2.Length);
-            System.Buffer.BlockCopy(d3, 0, data, d1.Length + d2.Length, d3.Length);
+            //Byte[] d3 = System.Text.Encoding.ASCII.GetBytes(message2);
+            Byte[] data = new Byte[d2.Length];// + d2.Length + d3.Length];
+            System.Buffer.BlockCopy(d2, 0, data, 0, d2.Length);
+            //System.Buffer.BlockCopy(d2, 0, data, d1.Length, d2.Length);
+            //System.Buffer.BlockCopy(d3, 0, data, d1.Length+d2.Length, d3.Length);
 
             // Get a client stream for reading and writing. 
             Debug.Log(BitConverter.ToString(data));
-            System.Net.Sockets.NetworkStream stream = this.tcpClient.GetStream();
+            //System.Net.Sockets.NetworkStream stream = this.tcpClient.GetStream();
 
             // Send the message to the connected TcpServer. 
-            stream.Write(data, 0, data.Length);
-            //close here or close at end of round
-            stream.Dispose();
-            this.tcpClient.Dispose();
+            this.stream.Write(data, 0, data.Length);
+            //this.stream.Dispose();
+            //this.tcpClient.Dispose();
             endEarlyFunc();
         }
 
@@ -743,8 +751,9 @@ namespace DesignerAssets
             this.theCost = criteria[2];
             this.theSpeed = criteria[3];
             this.paused = true;
-            this.resumeFuncPointer = resumeFuncPointer;
 
+
+            this.resumeFuncPointer = resumeFuncPointer;
         }
 
         public void resume()
@@ -752,6 +761,25 @@ namespace DesignerAssets
             paused = false;
             resumeFuncPointer();
             ResetDesignModeView();
+            int message1 = 1;
+            //string message2 = "xyz";
+
+            // Translate the passed message into ASCII and store it as a Byte array.
+            //Byte[] d1 = System.Text.Encoding.ASCII.GetBytes(message);
+            Byte[] d2 = BitConverter.GetBytes(message1);
+            //Byte[] d3 = System.Text.Encoding.ASCII.GetBytes(message2);
+            Byte[] data = new Byte[d2.Length];// + d2.Length + d3.Length];
+            System.Buffer.BlockCopy(d2, 0, data, 0, d2.Length);
+            //System.Buffer.BlockCopy(d2, 0, data, d1.Length, d2.Length);
+            //System.Buffer.BlockCopy(d3, 0, data, d1.Length+d2.Length, d3.Length);
+
+            // Get a client stream for reading and writing. 
+            Debug.Log(BitConverter.ToString(data));
+            //System.Net.Sockets.NetworkStream stream = this.tcpClient.GetStream();
+
+            // Send the message to the connected TcpServer. 
+
+            this.stream.Write(data, 0, data.Length);
             dataList.Add("Round " + theRound.ToString());
         }
 

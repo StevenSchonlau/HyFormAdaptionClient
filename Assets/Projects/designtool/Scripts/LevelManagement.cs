@@ -28,12 +28,12 @@ public class LevelManagement : MonoBehaviour
     public int[,] criteria = new int[numLevels, 4]
     {
         //range, capacity, cost, velocity
-        {9, 5, 3370, 18},
-        {0, 15, 0, 0},
-        {0, 10, 0, 0},
-        {0, 7, 0, 0},
-        {0, 20, 0, 0},
-        {0, 23, 0, 0}
+        {6, 5, 3370, 18},
+        {0, 15, 4000, 0},
+        {0, 10, 5000, 0},
+        {0, 7, 5000, 0},
+        {0, 20, 5000, 0},
+        {0, 23, 5000, 0}
     };
         
 
