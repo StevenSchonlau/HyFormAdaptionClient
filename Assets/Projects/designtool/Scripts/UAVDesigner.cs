@@ -287,7 +287,7 @@ namespace DesignerAssets
         private Rect resetDesignRect = new Rect(70, 10, 28, 28);
         private Rect undoRect = new Rect(10, 10, 28, 28);
         private Rect redoRect = new Rect(40, 10, 28, 28);
-        private Rect evalRect = new Rect(20, Screen.height/12 * 5 +30, 100, 25);
+        private Rect evalRect = new Rect(20, Screen.height / 12 * 5 + 30, Screen.width / 4, Screen.height / 10);
         private Rect submitRect = new Rect(340, 180, 100, 25);
         private Rect designModePopopRect = new Rect(224, 180, 100, 25);
         private Rect aiRect = new Rect(128, 140, 28, 28);
@@ -298,15 +298,18 @@ namespace DesignerAssets
         private bool setShock = true;
         private bool shockConstraintHit = false;
 
+        //criteria to meet, passed in from LevelManagement.cs
         private int theCapacity = 10;
         private int theCost;
         private int theRange;
         private int theSpeed;
 
+        //the current metrics met
         private int theCurCost = -1;
         private int theCurRange = -1;
         private int theCurSpeed = -1;
 
+        //tracking timing, status booleans, and function pointers
         private bool last10Seconds = false;
         private int seconds;
         private bool paused = false;
@@ -315,11 +318,20 @@ namespace DesignerAssets
         private Action startFuncPointer = null;
         private Action endEarlyFunc = null;
         private bool endGame = false;
+
+        //current round
         private int theRound = 0;
-        private int conditionsMet = 0; 
 
-        List<string> dataList = new List<string>() { "Drone Designer" };
+        //conditions met, in octal
+        private int conditionsMet = 0;
 
+        //texture for evaluate button
+        private Texture2D btnTex;
+
+        //logging data structure
+        List<string> dataList = new List<string>() { "Drone Designer", "Round 1" };
+
+        //TCP connection to fNIRS
         System.Net.Sockets.TcpClient tcpClient;
         System.Net.Sockets.NetworkStream stream;
         private bool tcpInit = false;
@@ -338,8 +350,6 @@ namespace DesignerAssets
         /// </summary>
         void Start()
         {
-
-
             if (!Startup.tutorial)
                 tutorialStep = 100;
 
@@ -351,6 +361,8 @@ namespace DesignerAssets
 
             // disable full screen
             Screen.fullScreen = false;
+
+            btnTex = MakeTex(600, 600, new Color(0.3f, 0.3f, 0.3f, 0.6f));
 
             // load toolbar icons
             LoadToolbarIcons();
@@ -578,6 +590,12 @@ namespace DesignerAssets
 
         }
 
+
+        /// <summary>
+        /// 
+        /// This function displays the menu in between rounds
+        /// 
+        /// </summary>
         void onGUIPauseMode()
         {
 
@@ -585,7 +603,7 @@ namespace DesignerAssets
             GUI.contentColor = Color.white;
 
             GUI.Box(new Rect(0, 0, Screen.width, Screen.height), "");
-            if (GUI.Button(new Rect(Screen.width / 2-50, Screen.height / 2+40, 100, 50), new GUIContent("Next Round", "Proceed to the next round")))
+            if (GUI.Button(new Rect(Screen.width / 2-50, Screen.height / 2+40, 100, 50), new GUIContent("Next Round")))
             {
                 resume();
             }
@@ -599,6 +617,12 @@ namespace DesignerAssets
             GUI.Label(new Rect(Screen.width/2-70, 240, 140, 25), "Range (mi): " + theRange.ToString(), fontChange);
         }
 
+
+        /// <summary>
+        /// This function is called from LevelManagement to pass in function pointers
+        /// </summary>
+        /// <param name="startFuncPointer">starts timer and round</param>
+        /// <param name="endEarly">ends round when conditions are met</param>
         public void awakeFunc(Action startFuncPointer, Action endEarly)
         {
             this.startFuncPointer = startFuncPointer;
@@ -606,6 +630,9 @@ namespace DesignerAssets
 
         }
 
+        /// <summary>
+        /// This function is called when the start button is pressed. It starts the TCP connection with the fNIRS
+        /// </summary>
         void startFunc()
         {
             starting = false;
@@ -619,63 +646,47 @@ namespace DesignerAssets
                 this.tcpClient.Connect(ipEndPoint);
                 this.stream = this.tcpClient.GetStream();
             }
-            //string message = "1";
             int message1 = 1;
-            //string message2 = "xyz";
-
-            // Translate the passed message into ASCII and store it as a Byte array.
-            //Byte[] d1 = System.Text.Encoding.ASCII.GetBytes(message);
             Byte[] d2 = BitConverter.GetBytes(message1);
-            //Byte[] d3 = System.Text.Encoding.ASCII.GetBytes(message2);
-            Byte[] data = new Byte[d2.Length];// + d2.Length + d3.Length];
+            Byte[] data = new Byte[d2.Length];
             System.Buffer.BlockCopy(d2, 0, data, 0, d2.Length);
-            //System.Buffer.BlockCopy(d2, 0, data, d1.Length, d2.Length);
-            //System.Buffer.BlockCopy(d3, 0, data, d1.Length+d2.Length, d3.Length);
-
-            // Get a client stream for reading and writing. 
             Debug.Log(BitConverter.ToString(data));
-            //System.Net.Sockets.NetworkStream stream = this.tcpClient.GetStream();
-
-            // Send the message to the connected TcpServer. 
-            this.stream.Write(data, 0, data.Length);
-            //close here or close at end of round
-            //stream.Dispose();
-            //this.tcpClient.Dispose();
+            if (this.stream == null)
+            {
+                Debug.Log("No fNIRS connected");
+            }
+            else
+            {
+                this.stream.Write(data, 0, data.Length);
+            }
         }
 
+
+        /// <summary>
+        /// This function is called at the end of the round. It ends the round with the fNIRS
+        /// </summary>
         void endFunc ()
         {
             Debug.Log("End of Round, end fNIRS");
-            /*this.tcpClient = new System.Net.Sockets.TcpClient();
-            System.Net.IPAddress ipAddress = System.Net.IPAddress.Parse("127.0.0.1");
-            System.Net.IPEndPoint ipEndPoint = new System.Net.IPEndPoint(ipAddress, 60000);
-
-            this.tcpClient.Connect(ipEndPoint);*/
-
-            //string message = "1";
             int message1 = 2;
-            //string message2 = "xyz";
-
-            // Translate the passed message into ASCII and store it as a Byte array.
-            //Byte[] d1 = System.Text.Encoding.ASCII.GetBytes(message);
             Byte[] d2 = BitConverter.GetBytes(message1);
-            //Byte[] d3 = System.Text.Encoding.ASCII.GetBytes(message2);
-            Byte[] data = new Byte[d2.Length];// + d2.Length + d3.Length];
+            Byte[] data = new Byte[d2.Length];
             System.Buffer.BlockCopy(d2, 0, data, 0, d2.Length);
-            //System.Buffer.BlockCopy(d2, 0, data, d1.Length, d2.Length);
-            //System.Buffer.BlockCopy(d3, 0, data, d1.Length+d2.Length, d3.Length);
-
-            // Get a client stream for reading and writing. 
             Debug.Log(BitConverter.ToString(data));
-            //System.Net.Sockets.NetworkStream stream = this.tcpClient.GetStream();
-
-            // Send the message to the connected TcpServer. 
-            this.stream.Write(data, 0, data.Length);
-            //this.stream.Dispose();
-            //this.tcpClient.Dispose();
+            if (this.stream == null)
+            {
+                Debug.Log("No fNIRS connected");
+            }
+            else
+            {
+                this.stream.Write(data, 0, data.Length);
+            }
             endEarlyFunc();
         }
 
+        /// <summary>
+        /// Start menu
+        /// </summary>
         void onGUITitleMode()
         {
 
@@ -683,13 +694,13 @@ namespace DesignerAssets
             GUI.contentColor = Color.white;
 
             GUI.Box(new Rect(0, 0, Screen.width, Screen.height), "");
-            if (GUI.Button(new Rect(Screen.width / 2 - 50, Screen.height / 2 + 40, 100, 50), new GUIContent("Start!", "Proceed to the next round")))
+            if (GUI.Button(new Rect(Screen.width / 2 - 50, Screen.height / 2 + 40, 100, 50), new GUIContent("Start!")))
             {
                 startFunc();
             }
         }
 
-        //used for download
+        //used for download in WEBGL
         static string scriptTemplate = @"
             var link = document.createElement(""a"");
             link.download = '{0}';
@@ -700,20 +711,33 @@ namespace DesignerAssets
             delete link;
         ";
 
-        //this creates a downloadable file for WebGL for the log
+        //this creates a downloadable file for WebGL for the log, only used for WEBGL
         public static void InitiateDownload(string aName, byte[] aData)
         {
             string base64 = System.Convert.ToBase64String(aData);
+
             string script = string.Format(scriptTemplate, aName, base64);
             Application.ExternalEval(script);
+
         }
 
-        //This converts the list of log messages to a newline separated string, and calls download
+        //This converts the list of log messages to a newline separated string, and calls download, or writes to a file if in editor
         public static void downloadBtn(string aName, List<string> aData)
         {
             var joinedData = String.Join("\n", aData.ToArray());
             byte[] data = System.Text.Encoding.UTF8.GetBytes(joinedData);
+#if UNITY_EDITOR || UNITY_STANDALONE
+            System.IO.StreamWriter sr = System.IO.File.CreateText("output" + DateTime.Now.ToString().Replace(" ", "_").Replace("/", "_").Replace(":", "_") + ".txt");
+            sr.Write (joinedData);
+            string fullPath = ((System.IO.FileStream)(sr.BaseStream)).Name;
+            Debug.Log(fullPath);
+            sr.Close();
+            Debug.Log("Made file");
+
+#endif
+#if UNITY_WEBGL && !UNITY_EDITOR
             InitiateDownload(aName, data);
+#endif
         }
 
         //at end of all rounds
@@ -743,6 +767,11 @@ namespace DesignerAssets
             last10Seconds = true;
         }
 
+        /// <summary>
+        /// This function is called in between rounds and passes the function pointer to start timer again
+        /// </summary>
+        /// <param name="criteria">new criteria</param>
+        /// <param name="resumeFuncPointer">resume func pointer</param>
         public void pause(int[] criteria, Action resumeFuncPointer)
         {
             this.last10Seconds = false;
@@ -755,37 +784,57 @@ namespace DesignerAssets
 
             this.resumeFuncPointer = resumeFuncPointer;
         }
-
+        /// <summary>
+        /// This function is called once the next round is started, also starts up fNIRS again
+        /// </summary>
         public void resume()
         {
             paused = false;
             resumeFuncPointer();
             ResetDesignModeView();
             int message1 = 1;
-            //string message2 = "xyz";
-
-            // Translate the passed message into ASCII and store it as a Byte array.
-            //Byte[] d1 = System.Text.Encoding.ASCII.GetBytes(message);
             Byte[] d2 = BitConverter.GetBytes(message1);
-            //Byte[] d3 = System.Text.Encoding.ASCII.GetBytes(message2);
-            Byte[] data = new Byte[d2.Length];// + d2.Length + d3.Length];
+            Byte[] data = new Byte[d2.Length];
             System.Buffer.BlockCopy(d2, 0, data, 0, d2.Length);
-            //System.Buffer.BlockCopy(d2, 0, data, d1.Length, d2.Length);
-            //System.Buffer.BlockCopy(d3, 0, data, d1.Length+d2.Length, d3.Length);
-
-            // Get a client stream for reading and writing. 
             Debug.Log(BitConverter.ToString(data));
-            //System.Net.Sockets.NetworkStream stream = this.tcpClient.GetStream();
-
-            // Send the message to the connected TcpServer. 
-
-            this.stream.Write(data, 0, data.Length);
-            dataList.Add("Round " + theRound.ToString());
+            if (this.stream == null)
+            {
+                Debug.Log("No fNIRS connected");
+            }
+            else
+            {
+                this.stream.Write(data, 0, data.Length);
+            }
+            dataList.Add("Round " + (theRound+2).ToString());
         }
 
+        /// <summary>
+        /// this updates the timer in the gui
+        /// </summary>
+        /// <param name="theSecond">seconds since round started</param>
         public void UpdateSecond(int theSecond)
         {
             seconds = theSecond;
+        }
+        /// <summary>
+        /// helper function to create texture for Evaluate button
+        /// </summary>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <param name="col">Color of button</param>
+        /// <returns></returns>
+        private Texture2D MakeTex(int width, int height, Color col)
+        {
+            Color[] pix = new Color[width * height];
+
+            for (int i = 0; i < pix.Length; i++)
+                pix[i] = col;
+
+            Texture2D result = new Texture2D(width, height);
+            result.SetPixels(pix);
+            result.Apply();
+
+            return result;
         }
 
         /// <summary>
@@ -795,7 +844,8 @@ namespace DesignerAssets
         /// </summary>
         void onGUIDesignMode()
         {
-            evalRect = new Rect(20, Screen.height / 12 * 5 + 30, 100, 25);
+            evalRect = new Rect(20, Screen.height / 12 * 5 + 30, Screen.width / 4, Screen.height / 10);
+            //evalRect = new Rect(20, Screen.height / 12 * 5 + 30, 100, 25);
             // set successful run
             successfulRun = false;
 
@@ -824,7 +874,7 @@ namespace DesignerAssets
                 if ((conditionsMet & 1) == 1) //ie bit one set
                 {
                     conditionsMet -= 1;
-                    dataList.Add(Time.time + ";Speed Lost");
+                    dataList.Add(Time.unscaledTime + ";Speed Lost");
                 }
             }
             else
@@ -833,7 +883,7 @@ namespace DesignerAssets
                 if ((conditionsMet & 1) == 0) //ie bit one not set
                 {
                     conditionsMet += 1;
-                    dataList.Add(Time.time + ";Speed Met");
+                    dataList.Add(Time.unscaledTime + ";Speed Met");
                 }
             }
             GUI.Label(new Rect(20, Screen.height*2 / 12 + offset, Screen.width / 5, Screen.height / 12), "Speed (m/s): " + theSpeed.ToString() + "   Current: " + theCurSpeed.ToString(), fontChange);
@@ -843,7 +893,7 @@ namespace DesignerAssets
                 if ((conditionsMet & 2) == 1) //ie bit one not set
                 {
                     conditionsMet -= 2;
-                    dataList.Add(Time.time + ";Cost Lost");
+                    dataList.Add(Time.unscaledTime + ";Cost Lost");
                 }
             }
             else
@@ -852,7 +902,7 @@ namespace DesignerAssets
                 if ((conditionsMet & 2) == 0) //ie bit one not set
                 {
                     conditionsMet += 2;
-                    dataList.Add(Time.time + ";Cost Met");
+                    dataList.Add(Time.unscaledTime + ";Cost Met");
                 }
             }
             GUI.Label(new Rect(20, Screen.height * 3 / 12 + offset, Screen.width / 5, Screen.height / 12), "Cost ($): " + theCost.ToString() + "   Current: " + theCurCost.ToString(), fontChange);
@@ -862,7 +912,7 @@ namespace DesignerAssets
                 if ((conditionsMet & 4) == 1) //ie bit one not set
                 {
                     conditionsMet -= 4;
-                    dataList.Add(Time.time + ";Range Lost");
+                    dataList.Add(Time.unscaledTime + ";Range Lost");
                 }
             } else
             {
@@ -870,7 +920,7 @@ namespace DesignerAssets
                 if ((conditionsMet & 4) == 0) //ie bit one not set
                 {
                     conditionsMet += 4;
-                    dataList.Add(Time.time + ";Range Met");
+                    dataList.Add(Time.unscaledTime + ";Range Met");
                 }
             }
             GUI.Label(new Rect(20, Screen.height * 4 / 12 + offset, Screen.width / 5, Screen.height / 12), "Range (mi): " + theRange.ToString() + "   Current: " + theCurRange.ToString(), fontChange);
@@ -879,8 +929,11 @@ namespace DesignerAssets
             {
                 endFunc();
             }
-            
-            if (GUI.Button(evalRect, new GUIContent("Evaluate", "Evaluate the Design Performance in a Test Environment")))
+            GUIStyle fontChangeBtn = new GUIStyle();
+            fontChangeBtn.fontSize = Screen.height / 22;
+            fontChangeBtn.normal.background = btnTex;
+            fontChangeBtn.alignment = TextAnchor.MiddleCenter;
+            if (GUI.Button(evalRect, new GUIContent("Evaluate"), fontChangeBtn))
             {
                 checkForConstraint();
                 if (shockConstraintHit)
@@ -899,7 +952,7 @@ namespace DesignerAssets
                 // runServerEvaluation();
                 runLocalEvaluation();
                 Capture.Log("Evaluate;" + generatestring(), Capture.DESIGNER);
-                dataList.Add(Time.time + ";Evaluate;" + generatestring());
+                dataList.Add(Time.unscaledTime + ";Evaluate;" + generatestring());
                 ShowMsg("Evaluating ...", false);
                 playClick();
             }
@@ -913,7 +966,7 @@ namespace DesignerAssets
                     historyIndex -= 1;
                     fromstring(history[historyIndex]);
                     Capture.Log("Undo:" + history[historyIndex], Capture.DESIGNER);
-                    dataList.Add(Time.time + ";Undo:" + history[historyIndex]);
+                    dataList.Add(Time.unscaledTime + ";Undo:" + history[historyIndex]);
                     playClick();
                 }
             }
@@ -929,7 +982,7 @@ namespace DesignerAssets
                         historyIndex += 1;
                         fromstring(history[historyIndex]);
                         Capture.Log("Redo:" + history[historyIndex], Capture.DESIGNER);
-                        dataList.Add(Time.time + ";Redo:" + history[historyIndex]);
+                        dataList.Add(Time.unscaledTime + ";Redo:" + history[historyIndex]);
                         playClick();
                     }
                 }
@@ -953,7 +1006,7 @@ namespace DesignerAssets
             {
                 ResetView();
                 Capture.Log("ResetView;" + generatestring(), Capture.DESIGNER);
-                dataList.Add(Time.time + ";ResetView" + generatestring());
+                dataList.Add(Time.unscaledTime + ";ResetView" + generatestring());
                 playClick();
             }
 
@@ -1035,7 +1088,7 @@ namespace DesignerAssets
                 // show return to design mode and submit buttons
 
                 // button to toggle back to design mode
-                if (GUI.Button(designModePopopRect, new GUIContent("OK", "Return to Design Mode")))
+                if (GUI.Button(designModePopopRect, new GUIContent("OK")))
                 {
                     GameObject.Find(POPUPCONFIRMEVALUATION).GetComponent<Canvas>().enabled = false;
                     ResetDesignModeView();
@@ -1208,8 +1261,11 @@ namespace DesignerAssets
                             string s = generatestring();
                             updateHistory(s);
                             playClick();
-                            Capture.Log("MouseClick;" + result[0] + ";" + s + ";" + result[1], Capture.DESIGNER);
-                            dataList.Add(Time.time + ";MouseClick;" + result[0] + ";" + s + ";" + result[1]);
+                            if (result[0] != "NoEvent")
+                            {
+                                Capture.Log("MouseClick;" + result[0] + ";" + s + ";" + result[1], Capture.DESIGNER);
+                                dataList.Add(Time.unscaledTime + ";MouseClick;" + result[0] + ";" + s + ";" + result[1]);
+                            }
 
                             Debug.Log(result[0]);
                             if (tutorialStep == 1 && result[0].Contains("Toggle"))
@@ -1243,8 +1299,11 @@ namespace DesignerAssets
                         string s = generatestring();
                         updateHistory(s);
                         playClick();
-                        Capture.Log((Input.GetMouseButtonDown(1) ? "ScaleUp;" : "HotKeyScaleUp;") + s + ";" + getJointPositionStr(selected), Capture.DESIGNER);
-                        dataList.Add(Time.time + ";" + (Input.GetKeyDown(KeyCode.DownArrow) ? "HotKeyScaleDown;" : "ScaleDown;") + s + ";" + getJointPositionStr(selected));
+                        if (getJointPositionStr(selected) != "not found")
+                        {
+                            Capture.Log((Input.GetMouseButtonDown(1) ? "ScaleUp;" : "HotKeyScaleUp;") + s + ";" + getJointPositionStr(selected), Capture.DESIGNER);
+                            dataList.Add(Time.unscaledTime + ";" + (Input.GetKeyDown(KeyCode.DownArrow) ? "HotKeyScaleDown;" : "ScaleDown;") + s + ";" + getJointPositionStr(selected));
+                        }
                         if (tutorialStep == 5)
                             toggleTutorial();
 
@@ -1265,8 +1324,11 @@ namespace DesignerAssets
                         string s = generatestring();
                         updateHistory(s);
                         playClick();
-                        Capture.Log((Input.GetKeyDown(KeyCode.DownArrow) ? "HotKeyScaleDown;" : "ScaleDown;") + s + ";" + getJointPositionStr(selected), Capture.DESIGNER);
-                        dataList.Add(Time.time + ";" + (Input.GetKeyDown(KeyCode.DownArrow) ? "HotKeyScaleDown;" : "ScaleDown;") + s + ";" + getJointPositionStr(selected));
+                        if (getJointPositionStr(selected) != "not found")
+                        {
+                            Capture.Log((Input.GetKeyDown(KeyCode.DownArrow) ? "HotKeyScaleDown;" : "ScaleDown;") + s + ";" + getJointPositionStr(selected), Capture.DESIGNER);
+                            dataList.Add(Time.unscaledTime + ";" + (Input.GetKeyDown(KeyCode.DownArrow) ? "HotKeyScaleDown;" : "ScaleDown;") + s + ";" + getJointPositionStr(selected));
+                        }
                         if (tutorialStep == 6)
                             toggleTutorial();
 
@@ -1323,8 +1385,12 @@ namespace DesignerAssets
                             playClick();
 
                             string s = generatestring();
-                            Capture.Log(logInfo + ";" + comptype.ToString() + ";" + s + ";" + getJointPositionStr(selected), Capture.DESIGNER);
-                            dataList.Add(Time.time + ";" + logInfo + ";" + comptype.ToString() + ";" + s + ";" + getJointPositionStr(selected));
+
+                            if (getJointPositionStr(selected) != "not found")
+                            {
+                                Capture.Log(logInfo + ";" + comptype.ToString() + ";" + s + ";" + getJointPositionStr(selected), Capture.DESIGNER);
+                                dataList.Add(Time.unscaledTime + ";" + logInfo + ";" + comptype.ToString() + ";" + s + ";" + getJointPositionStr(selected));
+                            }
                             updateHistory(s);
 
                         }
@@ -1352,8 +1418,12 @@ namespace DesignerAssets
                                 // change joint component to empty
                                 changeJointToComponent(selected, JointInfo.UAVComponentType.None);
                                 playClick();
-                                Capture.Log("RemovedComponent;" + generatestring() + ";" + getJointPositionStr(selected), Capture.DESIGNER);
-                                dataList.Add(Time.time + ";" + "RemovedComponent;" + generatestring() + ";" + getJointPositionStr(selected));
+
+                                if (getJointPositionStr(selected) != "not found")
+                                {
+                                    Capture.Log("RemovedComponent;" + generatestring() + ";" + getJointPositionStr(selected), Capture.DESIGNER);
+                                    dataList.Add(Time.unscaledTime + ";" + "RemovedComponent;" + generatestring() + ";" + getJointPositionStr(selected));
+                                }
 
                                 if (tutorialStep == 4)
                                     toggleTutorial();
@@ -1436,7 +1506,7 @@ namespace DesignerAssets
 
                                     string s = generatestring();
                                     Capture.Log("RemovedConnector;" + s + ";" + position, Capture.DESIGNER);
-                                    dataList.Add(Time.time + ";RemovedComponent;" + generatestring() + ";" + getJointPositionStr(selected));
+                                    dataList.Add(Time.unscaledTime + ";RemovedComponent;" + generatestring() + ";" + getJointPositionStr(selected));
                                     //bottomLogString = "Removed connector";
                                     updateHistory(s);
 
@@ -1651,6 +1721,7 @@ namespace DesignerAssets
             catch (Exception e)
             {
                 Debug.Log(e);
+                return "not found";
             }
             return position;
         }
@@ -2204,7 +2275,7 @@ namespace DesignerAssets
                 // reset the base design
                 fromstring(BASEVEHICLECONFIG);
                 Capture.Log("ResetDesign", Capture.DESIGNER);
-                dataList.Add(Time.time + ";ResetDesign");
+                dataList.Add(Time.unscaledTime + ";ResetDesign");
 
                 updateHistory(BASEVEHICLECONFIG);
 
@@ -2406,7 +2477,7 @@ namespace DesignerAssets
                 ShowMsg(e.Message, true);
                 fromstring(history[historyIndex]);
                 Capture.Log(e.Message, Capture.DESIGNER);
-                dataList.Add(Time.time + ";" + e.Message);
+                dataList.Add(Time.unscaledTime + ";" + e.Message);
                 return history[historyIndex];
             }
 

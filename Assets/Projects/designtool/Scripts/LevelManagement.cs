@@ -64,7 +64,7 @@ public class LevelManagement : MonoBehaviour
     {
         
         theLevel = new iLevel(0);
-        Debug.Log("Started!");
+        //Debug.Log("Started!");
         dt = DateTime.Now;
         dt = dt.AddSeconds(timeLimit - 10); //start of level
         StartLevel();
@@ -93,7 +93,8 @@ public class LevelManagement : MonoBehaviour
                 else if (state == 1)
                 {
                     Debug.Log("Level End!");
-                    if (theLevel.level > numLevels)
+                    EndLevel();
+                    if (theLevel.level >= numLevels)
                     {
                         //display end title screen
                         uavd.end();
@@ -101,9 +102,12 @@ public class LevelManagement : MonoBehaviour
                     }
                     else
                     {
-                        EndLevel();
                         //pass criteria and resume function pointer to uavd
-                        int[] theCriteria = new int[4] { criteria[theLevel.level, 0], criteria[theLevel.level, 1], criteria[theLevel.level, 2], criteria[theLevel.level, 3] };
+                        int[] theCriteria = new int[4];
+                        if (theLevel.level < numLevels)
+                        {
+                            theCriteria = new int[4] { criteria[theLevel.level, 0], criteria[theLevel.level, 1], criteria[theLevel.level, 2], criteria[theLevel.level, 3] };
+                        }
                         Action funcPointer = null;
                         funcPointer = ResumeLevel;
                         uavd.pause(theCriteria, funcPointer);
@@ -112,10 +116,19 @@ public class LevelManagement : MonoBehaviour
                 }
                 else if (state == 2)
                 {
-                    Debug.Log("Start of Level");
-                    StartLevel();
-                    state = 0;
-                    overriden = false;
+                    if (theLevel.level >= numLevels)
+                    {
+                        //display end title screen
+                        uavd.end();
+                        state = -1;
+                    }
+                    else
+                    {
+                        Debug.Log("Start of Level");
+                        StartLevel();
+                        state = 0;
+                        overriden = false;
+                    }
                 }
             }
         }
